@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+  <title>Night Market - User Login</title>
+  <!-- Mobile PWA Meta Tags -->
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#FFC107" media="(prefers-color-scheme: light)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Night Market" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+  <!-- Mobile CSS -->
+  <link rel="stylesheet" href="../../css/mobile.css" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=Poppins:wght@300;400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#FFC107",
+            "primary-hover": "#FFCA28",
+            "background-light": "#FFFFFF",
+            "background-dark": "#050505",
+            "surface-light": "#F9FAFB",
+            "surface-dark": "#121212",
+            "text-main": "#FFFFFF",
+            "text-muted": "#9CA3AF",
+          },
+          fontFamily: {
+            "display": ["Poppins", "sans-serif"],
+            "header": ["Oswald", "sans-serif"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+    }
+  </style>
+</head>
+
+<body
+  class="font-display bg-background-light dark:bg-background-dark text-gray-900 dark:text-white transition-colors duration-200">
+  <div class="flex min-h-screen w-full overflow-hidden">
+    <div class="hidden lg:flex lg:w-1/2 relative flex-col justify-end p-16 overflow-hidden bg-surface-dark group">
+      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+        data-alt="Food delivery dispatch rider on a motorbike" style='background-image: url("rider_image.jpg");'>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/30 opacity-95"></div>
+      <div class="relative z-10 max-w-lg">
+        <div
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 mb-8 backdrop-blur-sm">
+          <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+          <span class="text-primary text-sm font-medium">Trusted by 500+ Riders</span>
+        </div>
+        <h2 class="font-header text-6xl font-bold text-white mb-6 leading-tight text-shadow">
+          RIDE THE<br />
+          <span class="text-primary">NIGHT</span> WAVE
+        </h2>
+        <p class="text-white/80 text-lg leading-relaxed mb-8">
+          Join the fastest-growing rider network. Book your shifts, track earnings, and connect with fellow riders in
+          real-time.
+        </p>
+        <div class="flex items-center gap-8">
+          <div class="flex flex-col">
+            <span class="text-3xl font-bold text-white">24/7</span>
+            <span class="text-white/60 text-sm">Support</span>
+          </div>
+          <div class="w-px h-12 bg-white/20"></div>
+          <div class="flex flex-col">
+            <span class="text-3xl font-bold text-white">98%</span>
+            <span class="text-white/60 text-sm">Satisfaction</span>
+          </div>
+          <div class="w-px h-12 bg-white/20"></div>
+          <div class="flex flex-col">
+            <span class="text-3xl font-bold text-white">5K+</span>
+            <span class="text-white/60 text-sm">Deliveries</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="w-full lg:w-1/2 flex flex-col bg-background-light dark:bg-black transition-colors duration-300 overflow-y-auto">
+      <div class="flex-1 flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-12 lg:py-0">
+        <div class="max-w-md w-full mx-auto">
+          <div class="flex items-center gap-3 mb-12">
+            <div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+              <span class="material-symbols-outlined text-black text-[28px] font-bold">two_wheeler</span>
+            </div>
+            <span class="font-header text-3xl font-bold text-gray-900 dark:text-white tracking-wide">NIGHT MARKET</span>
+          </div>
+          <div class="mb-10">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-3">Welcome Back</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">Enter your details to access your account.</p>
+          </div>
+          <div
+            class="inline-flex p-1 rounded-lg bg-gray-100 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] mb-10 transition-colors duration-200">
+            <button
+              class="px-6 py-3 rounded-md text-sm font-bold transition-all duration-200 bg-primary shadow-sm text-black"
+              id="loginTab">Login</button>
+            <button
+              class="px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 text-gray-500 dark:text-gray-400"
+              id="signupTab">Sign Up</button>
+          </div>
+          <div class="hidden px-4 py-3 rounded-lg text-sm font-medium mb-6" id="authMessage"></div>
+          <form class="flex flex-col gap-6" id="loginForm">
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest transition-colors duration-200"
+                for="loginName">Full Name</label>
+              <div class="relative group">
+                <input
+                  class="w-full h-14 rounded-lg border border-gray-300 dark:border-[#333] bg-white dark:bg-[#111] px-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white dark:focus:bg-[#111] transition-all duration-300"
+                  id="loginName" placeholder="John Doe" required="" type="text" />
+                <div
+                  class="absolute inset-y-0 right-5 flex items-center pointer-events-none group-focus-within:text-primary text-gray-400 dark:text-gray-600 transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">person</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest transition-colors duration-200"
+                for="loginPhone">Phone Number</label>
+              <div class="relative group">
+                <input
+                  class="w-full h-14 rounded-lg border border-gray-300 dark:border-[#333] bg-white dark:bg-[#111] px-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white dark:focus:bg-[#111] transition-all duration-300"
+                  id="loginPhone" placeholder="+233 XX XXX XXXX" required="" type="tel" />
+                <div
+                  class="absolute inset-y-0 right-5 flex items-center pointer-events-none group-focus-within:text-primary text-gray-400 dark:text-gray-600 transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">phone</span>
+                </div>
+              </div>
+            </div>
+            <button type="submit" id="loginBtn"
+              class="w-full h-16 mt-4 bg-primary hover:bg-primary-hover text-black font-header font-black text-2xl rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-[0.99] uppercase tracking-wider group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-spinner hidden">
+                <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+              </span>
+              <span
+                class="material-symbols-outlined text-[28px] font-black stroke-2 transition-transform duration-300 group-hover:translate-x-1 btn-arrow">arrow_forward</span>
+            </button>
+          </form>
+          <form class="flex flex-col gap-6 hidden" id="signupForm">
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest transition-colors duration-200"
+                for="signupName">Full Name</label>
+              <div class="relative group">
+                <input
+                  class="w-full h-14 rounded-lg border border-gray-300 dark:border-[#333] bg-white dark:bg-[#111] px-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white dark:focus:bg-[#111] transition-all duration-300"
+                  id="signupName" placeholder="John Doe" required="" type="text" />
+                <div
+                  class="absolute inset-y-0 right-5 flex items-center pointer-events-none group-focus-within:text-primary text-gray-400 dark:text-gray-600 transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">person</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest transition-colors duration-200"
+                for="signupPhone">Phone Number</label>
+              <div class="relative group">
+                <input
+                  class="w-full h-14 rounded-lg border border-gray-300 dark:border-[#333] bg-white dark:bg-[#111] px-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white dark:focus:bg-[#111] transition-all duration-300"
+                  id="signupPhone" placeholder="+233 XX XXX XXXX" required="" type="tel" />
+                <div
+                  class="absolute inset-y-0 right-5 flex items-center pointer-events-none group-focus-within:text-primary text-gray-400 dark:text-gray-600 transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">phone</span>
+                </div>
+              </div>
+            </div>
+            <button type="submit" id="signupBtn"
+              class="w-full h-16 mt-6 bg-primary hover:bg-primary-hover text-black font-header font-black text-2xl rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 flex items-center justify-center gap-3 transform hover:-translate-y-1 active:scale-[0.99] uppercase tracking-wider group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <span class="btn-text">Create Account</span>
+              <span class="btn-spinner hidden">
+                <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+              </span>
+              <span
+                class="material-symbols-outlined text-[28px] font-black stroke-2 transition-transform duration-300 group-hover:translate-x-1 btn-arrow">arrow_forward</span>
+            </button>
+          </form>
+
+        </div>
+        <div class="mt-10 text-center" id="createAccountPrompt">
+          <p class="text-gray-500 dark:text-gray-400 transition-colors">
+            Don't have an account?
+            <a class="font-bold text-primary hover:text-primary-hover transition-colors inline-flex items-center gap-1 group"
+              href="#" id="createAccountLink">
+              Create one now
+              <span
+                class="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">arrow_right_alt</span>
+            </a>
+          </p>
+        </div>
+      </div>
+      <div
+        class="px-8 lg:px-12 py-6 text-center lg:text-left border-t border-gray-200 dark:border-white/5 mt-auto bg-gray-50 dark:bg-[#111] transition-colors duration-200">
+        <p class="text-xs text-gray-500">
+          © 2024 NightMarket. By logging in, you agree to our <a
+            class="text-primary hover:text-primary-hover transition-colors" href="#">Terms of Service</a> and <a
+            class="text-primary hover:text-primary-hover transition-colors" href="#">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Check if already logged in
+      if (AuthAPI.isLoggedIn()) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect') || '/booking_schedule/code.html';
+        window.location.href = redirect;
+        return;
+      }
+
+      // DOM Elements
+      const loginTab = document.getElementById('loginTab');
+      const signupTab = document.getElementById('signupTab');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const authMessage = document.getElementById('authMessage');
+      const pageTitle = document.querySelector('h1');
+      const pageSubtitle = document.querySelector('h1 + p');
+      const createAccountPrompt = document.getElementById('createAccountPrompt');
+
+      // Tab Switching
+      function showLogin() {
+        loginTab.classList.add('bg-primary', 'shadow-sm', 'text-black', 'font-bold');
+        loginTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'font-medium');
+        signupTab.classList.remove('bg-primary', 'shadow-sm', 'text-black', 'font-bold');
+        signupTab.classList.add('text-gray-500', 'dark:text-gray-400', 'font-medium');
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+        createAccountPrompt.classList.remove('hidden');
+        pageTitle.textContent = 'Welcome Back';
+        pageSubtitle.textContent = 'Enter your details to access your account.';
+        hideMessage();
+      }
+
+      function showSignup() {
+        signupTab.classList.add('bg-primary', 'shadow-sm', 'text-black', 'font-bold');
+        signupTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'font-medium');
+        loginTab.classList.remove('bg-primary', 'shadow-sm', 'text-black', 'font-bold');
+        loginTab.classList.add('text-gray-500', 'dark:text-gray-400', 'font-medium');
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        createAccountPrompt.classList.add('hidden');
+        pageTitle.textContent = 'Create Account';
+        pageSubtitle.textContent = 'Sign up to start booking your rides.';
+        hideMessage();
+      }
+
+      loginTab.addEventListener('click', showLogin);
+      signupTab.addEventListener('click', showSignup);
+
+      // "Create one now" link
+      const createAccountLink = document.getElementById('createAccountLink');
+      if (createAccountLink) {
+        createAccountLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          showSignup();
+        });
+      }
+
+
+
+      // Message Display Functions
+      function showMessage(message, isError = true) {
+        authMessage.textContent = message;
+        authMessage.classList.remove('hidden');
+        if (isError) {
+          authMessage.classList.add('bg-red-100', 'dark:bg-red-900/30', 'text-red-700', 'dark:text-red-400', 'border', 'border-red-200', 'dark:border-red-800');
+          authMessage.classList.remove('bg-green-100', 'dark:bg-green-900/30', 'text-green-700', 'dark:text-green-400', 'border-green-200', 'dark:border-green-800');
+        } else {
+          authMessage.classList.add('bg-green-100', 'dark:bg-green-900/30', 'text-green-700', 'dark:text-green-400', 'border', 'border-green-200', 'dark:border-green-800');
+          authMessage.classList.remove('bg-red-100', 'dark:bg-red-900/30', 'text-red-700', 'dark:text-red-400', 'border-red-200', 'dark:border-red-800');
+        }
+      }
+
+      function hideMessage() {
+        authMessage.classList.add('hidden');
+      }
+
+
+
+      // Button Loading State
+      function setButtonLoading(btn, loading) {
+        const text = btn.querySelector('.btn-text');
+        const spinner = btn.querySelector('.btn-spinner');
+        const arrow = btn.querySelector('.btn-arrow');
+
+        if (loading) {
+          btn.disabled = true;
+          text.classList.add('hidden');
+          spinner.classList.remove('hidden');
+          arrow.classList.add('hidden');
+        } else {
+          btn.disabled = false;
+          text.classList.remove('hidden');
+          spinner.classList.add('hidden');
+          arrow.classList.remove('hidden');
+        }
+      }
+
+      // Login Form Handler
+      loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideMessage();
+
+        const name = document.getElementById('loginName').value.trim();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const loginBtn = document.getElementById('loginBtn');
+
+        if (!name || !phone) {
+          showMessage('Please fill in all fields');
+          return;
+        }
+
+        setButtonLoading(loginBtn, true);
+
+        const result = await AuthAPI.login(name, phone);
+
+        setButtonLoading(loginBtn, false);
+
+        if (result.success) {
+          showMessage('Login successful! Redirecting...', false);
+          setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || '/booking_schedule/code.html';
+            window.location.href = redirect;
+          }, 1000);
+        } else {
+          showMessage(result.message || 'Login failed. Please try again.');
+        }
+      });
+
+      // Signup Form Handler
+      signupForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        hideMessage();
+
+        const name = document.getElementById('signupName').value.trim();
+        const phone = document.getElementById('signupPhone').value.trim();
+        const signupBtn = document.getElementById('signupBtn');
+
+        if (!name || !phone) {
+          showMessage('Please fill in all fields');
+          return;
+        }
+
+        setButtonLoading(signupBtn, true);
+
+        const result = await AuthAPI.register(name, phone);
+
+        setButtonLoading(signupBtn, false);
+
+        if (result.success) {
+          showMessage('Account created! Redirecting...', false);
+          setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || '/booking_schedule/code.html';
+            window.location.href = redirect;
+          }, 1000);
+        } else {
+          showMessage(result.message || 'Registration failed. Please try again.');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

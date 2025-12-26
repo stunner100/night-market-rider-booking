@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Booking Confirmation - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "brand-bg": "rgb(var(--brand-bg) / <alpha-value>)",
+                        "brand-surface": "rgb(var(--brand-surface) / <alpha-value>)",
+                        "brand-surface-highlight": "rgb(var(--brand-surface-highlight) / <alpha-value>)",
+                        "brand-border": "rgb(var(--brand-border) / <alpha-value>)",
+                        "primary": "rgb(var(--primary) / <alpha-value>)",
+                        "primary-hover": "rgb(var(--primary-hover) / <alpha-value>)",
+                        "text-main": "rgb(var(--text-main) / <alpha-value>)",
+                        "text-muted": "rgb(var(--text-muted) / <alpha-value>)",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px" },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(253, 224, 71, 0.3)',
+                    }
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --brand-bg: 250 250 250;
+                --brand-surface: 255 255 255;
+                --brand-surface-highlight: 245 245 245;
+                --brand-border: 229 231 235;
+                --primary: 253 224 71;--primary-hover: 250 204 21;
+                --text-main: 10 10 10;
+                --text-muted: 82 82 82;
+            }
+            .dark {
+                --brand-bg: 0 0 0;
+                --brand-surface: 15 15 15;
+                --brand-surface-highlight: 28 28 28;
+                --brand-border: 40 40 40;
+                --primary: 253 224 71;--primary-hover: 234 179 8;
+                --text-main: 255 255 255;
+                --text-muted: 163 163 163;
+            }
+        }
+        @layer utilities {
+            .text-glow {
+                text-shadow: 0 0 10px rgba(253, 224, 71, 0.5);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-brand-bg font-body text-text-main overflow-x-hidden min-h-screen flex flex-col antialiased selection:bg-primary selection:text-black transition-colors duration-300">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <main class="flex-1 flex flex-col items-center py-12 px-4 md:px-10 bg-brand-bg transition-colors duration-300">
+        <div class="w-full max-w-[800px] flex flex-col gap-10">
+            <!-- Progress Bar -->
+            <div class="flex flex-col gap-4">
+                <div class="flex gap-6 justify-between items-end px-1">
+                    <p class="text-primary font-display font-bold tracking-widest uppercase text-xs">Booking Complete
+                    </p>
+                    <p id="bookingIdDisplay" class="text-text-muted text-xs font-bold uppercase tracking-widest">-</p>
+                </div>
+                <div
+                    class="rounded-full bg-brand-surface-highlight border border-brand-border h-1.5 overflow-hidden transition-colors">
+                    <div class="h-full bg-primary rounded-full shadow-[0_0_15px_rgba(253,224,71,0.6)]"
+                        style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="flex flex-col gap-3 text-center md:text-left">
+                <h1
+                    class="text-text-main text-5xl md:text-6xl font-display font-bold leading-tight tracking-tight transition-colors">
+                    Booking <span class="text-primary">Confirmed!</span></h1>
+                <p class="text-text-muted text-lg font-normal tracking-wide">Your ride has been secured. See you at the
+                    session!</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="flex items-center justify-center py-20">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+                    <p class="text-text-muted">Loading booking details...</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden flex items-center justify-center py-20">
+                <div class="flex flex-col items-center gap-4 text-center">
+                    <span class="material-symbols-outlined text-6xl text-red-400">error</span>
+                    <p class="text-text-muted text-lg">Booking not found</p>
+                    <a href="../booking_schedule/code.html"
+                        class="mt-2 px-6 py-3 bg-primary text-black font-bold rounded-lg hover:bg-primary-hover transition-colors">Book
+                        a New Ride</a>
+                </div>
+            </div>
+
+            <!-- Booking Details Card -->
+            <div id="bookingCard"
+                class="hidden bg-brand-surface rounded-3xl border border-brand-border shadow-xl overflow-hidden relative group transition-colors duration-300">
+                <div
+                    class="absolute -top-32 -right-32 w-80 h-80 bg-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-all duration-700">
+                </div>
+                <div class="p-8 md:p-10 flex flex-col gap-8 relative z-10">
+                    <div class="flex items-center gap-5 border-b border-brand-border pb-8 transition-colors">
+                        <div
+                            class="size-14 bg-brand-surface-highlight rounded-2xl flex items-center justify-center text-primary border border-brand-border shadow-sm transition-colors">
+                            <span class="material-symbols-outlined !text-3xl">confirmation_number</span>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-display font-bold text-text-main transition-colors">Session Summary
+                            </h2>
+                            <p class="text-xs text-text-muted uppercase tracking-widest font-bold mt-1">Review Details
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div
+                            class="flex flex-col p-5 rounded-2xl bg-brand-bg border border-brand-border hover:border-primary/50 transition-colors group/card">
+                            <div class="flex items-center justify-between mb-4">
+                                <span
+                                    class="text-[10px] font-bold text-text-muted uppercase tracking-widest group-hover/card:text-primary transition-colors">Date</span>
+                                <span class="material-symbols-outlined text-primary text-xl">calendar_today</span>
+                            </div>
+                            <p id="dateDisplay" class="text-text-main font-display font-bold text-xl transition-colors">
+                                -</p>
+                            <p id="yearDisplay" class="text-text-muted text-sm font-medium">-</p>
+                        </div>
+                        <div
+                            class="flex flex-col p-5 rounded-2xl bg-brand-bg border border-brand-border hover:border-primary/50 transition-colors group/card">
+                            <div class="flex items-center justify-between mb-4">
+                                <span
+                                    class="text-[10px] font-bold text-text-muted uppercase tracking-widest group-hover/card:text-primary transition-colors">Time</span>
+                                <span class="material-symbols-outlined text-primary text-xl">schedule</span>
+                            </div>
+                            <p id="timeDisplay" class="text-text-main font-display font-bold text-xl transition-colors">
+                                -</p>
+                            <p id="sessionLabel" class="text-text-muted text-sm font-medium">-</p>
+                        </div>
+                        <div
+                            class="flex flex-col p-5 rounded-2xl bg-brand-bg border border-brand-border hover:border-primary/50 transition-colors group/card">
+                            <div class="flex items-center justify-between mb-4">
+                                <span
+                                    class="text-[10px] font-bold text-text-muted uppercase tracking-widest group-hover/card:text-primary transition-colors">Duration</span>
+                                <span class="material-symbols-outlined text-primary text-xl">timer</span>
+                            </div>
+                            <p id="durationDisplay"
+                                class="text-text-main font-display font-bold text-xl transition-colors">-</p>
+                            <p class="text-text-muted text-sm font-medium">Ride Session</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-brand-surface-highlight/30 p-8 md:p-10 border-t border-brand-border transition-colors">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                        <div class="flex flex-col gap-3">
+                            <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Rider Identity
+                            </p>
+                            <div
+                                class="flex items-center gap-4 p-4 bg-brand-bg rounded-xl border border-brand-border transition-colors group/rider hover:border-primary/30">
+                                <div id="riderAvatar"
+                                    class="size-12 rounded-full bg-brand-surface bg-center bg-cover border border-brand-border transition-colors ring-2 ring-transparent group-hover/rider:ring-primary/20"
+                                    style="background-image: url('https://via.placeholder.com/48');"></div>
+                                <div>
+                                    <p id="riderName"
+                                        class="text-text-main text-base font-bold font-display transition-colors">-</p>
+                                    <p class="text-primary text-xs font-bold tracking-wide">Verified Member</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Zone Allocation
+                            </p>
+                            <div
+                                class="flex items-center gap-4 p-4 bg-brand-bg rounded-xl border border-brand-border h-full transition-colors group/zone hover:border-primary/30">
+                                <div
+                                    class="size-12 rounded-lg bg-brand-surface flex items-center justify-center text-text-muted border border-brand-border transition-colors group-hover/zone:text-primary group-hover/zone:border-primary/30">
+                                    <span class="material-symbols-outlined">map</span>
+                                </div>
+                                <div>
+                                    <p id="zoneDisplay"
+                                        class="text-text-main text-base font-bold font-display transition-colors">-</p>
+                                    <p class="text-text-muted text-xs font-medium">Assigned Zone</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="md:col-span-2 pt-8 mt-2 border-t border-dashed border-brand-border flex flex-col sm:flex-row justify-between items-end gap-6 transition-colors">
+                            <div class="flex flex-col gap-1 w-full sm:w-auto">
+                                <p class="text-text-muted text-sm font-medium">Rate per hour</p>
+                                <div class="flex items-baseline gap-2">
+                                    <span id="rateDisplay"
+                                        class="text-text-main text-xl font-bold font-display transition-colors">$20.00</span>
+                                    <span id="durationLabel"
+                                        class="text-text-muted text-xs font-medium bg-brand-surface-highlight px-2 py-1 rounded">x
+                                        - hrs</span>
+                                </div>
+                            </div>
+                            <div class="text-right flex flex-col items-end w-full sm:w-auto">
+                                <p class="text-primary font-bold text-[10px] uppercase tracking-widest mb-1">Total
+                                    Amount</p>
+                                <p id="totalDisplay"
+                                    class="text-text-main text-5xl font-display font-bold tracking-tight transition-colors">
+                                    $-.--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="p-8 md:p-10 flex flex-col-reverse md:flex-row gap-6 justify-end items-center bg-brand-surface border-t border-brand-border transition-colors rounded-b-3xl">
+                    <a href="../booking_schedule/code.html"
+                        class="w-full md:w-auto px-8 py-4 rounded-xl text-text-muted font-bold text-xs hover:text-text-main hover:bg-brand-surface-highlight transition-all font-display tracking-widest uppercase text-center no-underline">
+                        Book Another Ride
+                    </a>
+                    <a href="../my_bookings/code.html"
+                        class="w-full md:w-auto md:min-w-[340px] px-10 py-5 rounded-xl bg-primary text-black font-display font-black text-xl shadow-[0_0_40px_-10px_rgba(253,224,71,0.5)] hover:bg-primary-hover hover:shadow-[0_0_60px_-10px_rgba(253,224,71,0.7)] hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-3 tracking-wider border border-transparent hover:border-black/10 group relative overflow-hidden no-underline">
+                        <span class="relative z-10">VIEW MY BOOKINGS</span>
+                        <span
+                            class="material-symbols-outlined !text-3xl font-black relative z-10 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+            <div
+                class="flex justify-center items-center gap-2 text-text-muted text-xs font-medium opacity-60 hover:opacity-100 transition-opacity">
+                <span class="material-symbols-outlined text-[14px]">verified</span>
+                <span>Your booking is confirmed and secured.</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Get booking ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookingId = urlParams.get('id');
+
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+            const bookingCard = document.getElementById('bookingCard');
+
+            if (!bookingId) {
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                return;
+            }
+
+            // Get current user for display
+            const user = typeof AuthAPI !== 'undefined' ? AuthAPI.getCurrentUser() : null;
+
+            try {
+                // Fetch booking details - use auth if available
+                const fetchOptions = {};
+                if (typeof AuthAPI !== 'undefined' && AuthAPI.isLoggedIn()) {
+                    const response = await AuthAPI.authFetch(`/bookings/${bookingId}`);
+                    if (response.success && response.booking) {
+                        displayBooking(response.booking, user);
+                    } else {
+                        showError();
+                    }
+                } else {
+                    // Fallback to regular fetch for public access
+                    const response = await fetch(`http://localhost:3001/api/bookings/${bookingId}`);
+                    const data = await response.json();
+                    if (data.success && data.booking) {
+                        displayBooking(data.booking, user);
+                    } else {
+                        showError();
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching booking:', error);
+                showError();
+            }
+
+            function displayBooking(booking, user) {
+                loadingState.classList.add('hidden');
+                bookingCard.classList.remove('hidden');
+
+                // Format date
+                const date = new Date(booking.booking_date);
+                const dayName = date.toLocaleString('en-US', { weekday: 'short' });
+                const month = date.toLocaleString('en-US', { month: 'short' });
+                const day = date.getDate();
+                const year = date.getFullYear();
+
+                // Format time
+                const startTime = booking.start_time.slice(0, 5);
+                const endTime = booking.end_time.slice(0, 5);
+                const startHour = parseInt(startTime.split(':')[0]);
+                let sessionLabel = 'Session';
+                if (startHour < 12) sessionLabel = 'Morning Session';
+                else if (startHour < 17) sessionLabel = 'Afternoon Session';
+                else sessionLabel = 'Evening Session';
+
+                // Calculate duration display
+                const hours = booking.duration_minutes / 60;
+                const durationText = hours === 1 ? '1 Hour' : `${hours} Hours`;
+
+                // Update DOM
+                document.getElementById('bookingIdDisplay').textContent = booking.booking_id;
+                document.getElementById('dateDisplay').textContent = `${dayName}, ${month} ${day}`;
+                document.getElementById('yearDisplay').textContent = year;
+                document.getElementById('timeDisplay').textContent = `${startTime} - ${endTime}`;
+                document.getElementById('sessionLabel').textContent = sessionLabel;
+                document.getElementById('durationDisplay').textContent = durationText;
+                document.getElementById('zoneDisplay').textContent = booking.zone;
+                document.getElementById('rateDisplay').textContent = `$${parseFloat(booking.hourly_rate || 20).toFixed(2)}`;
+                document.getElementById('durationLabel').textContent = `x ${hours} hrs`;
+                document.getElementById('totalDisplay').textContent = `$${parseFloat(booking.total_cost).toFixed(2)}`;
+
+                // Rider info
+                if (user) {
+                    document.getElementById('riderName').textContent = user.name;
+                    if (user.avatar_url) {
+                        document.getElementById('riderAvatar').style.backgroundImage = `url('${user.avatar_url}')`;
+                    }
+                } else if (booking.rider_name) {
+                    document.getElementById('riderName').textContent = booking.rider_name;
+                }
+            }
+
+            function showError() {
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+            }
+        });
+    </script>
+    <!-- AI Chat Widget -->
+    <script src="../js/ai-chat.js"></script>
+
+</body>
+
+</html>

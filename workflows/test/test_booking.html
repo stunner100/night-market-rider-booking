@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Night Market - Booking API Tester</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0A0A0A; }
+    .gold-accent { color: #FDE047; }
+    .gold-bg { background-color: #FDE047; }
+    .surface { background-color: #121212; }
+    .surface-2 { background-color: #1A1A1A; }
+  </style>
+</head>
+<body class="text-white min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold gold-accent">Night Market</h1>
+      <p class="text-gray-400">Booking Webhook API Tester</p>
+    </header>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Request Form -->
+      <div class="surface rounded-xl p-6">
+        <h2 class="text-xl font-semibold mb-4">Create Booking Request</h2>
+
+        <div class="mb-4">
+          <label class="block text-gray-400 text-sm mb-1">Webhook URL</label>
+          <input type="text" id="webhookUrl"
+            value="http://localhost:5678/webhook/create-booking"
+            class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Rider ID</label>
+            <input type="text" id="riderId" value="USR-001"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Rider Name</label>
+            <input type="text" id="riderName" value="John Smith"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-400 text-sm mb-1">Rider Email</label>
+          <input type="email" id="riderEmail" value="john@example.com"
+            class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Booking Date</label>
+            <input type="date" id="bookingDate"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Start Time</label>
+            <input type="time" id="startTime" value="14:00"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Duration</label>
+            <select id="duration"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+              <option value="30">30 minutes - $10</option>
+              <option value="45">45 minutes - $15</option>
+              <option value="60" selected>60 minutes - $20</option>
+              <option value="90">90 minutes - $30</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-400 text-sm mb-1">Zone</label>
+            <select id="zone"
+              class="w-full surface-2 rounded-lg px-4 py-2 text-white border border-gray-700 focus:border-yellow-400 focus:outline-none">
+              <option value="Main Paddock">Main Paddock</option>
+              <option value="Zone A">Zone A</option>
+              <option value="Zone B">Zone B</option>
+              <option value="Trail Circuit">Trail Circuit</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="sendRequest()"
+          class="w-full gold-bg text-black font-semibold py-3 rounded-lg hover:opacity-90 transition">
+          Send Booking Request
+        </button>
+
+        <div class="mt-4 flex gap-2">
+          <button onclick="runAllTests()"
+            class="flex-1 border border-yellow-400 text-yellow-400 py-2 rounded-lg hover:bg-yellow-400 hover:text-black transition">
+            Run All Tests
+          </button>
+          <button onclick="clearResponse()"
+            class="flex-1 border border-gray-600 text-gray-400 py-2 rounded-lg hover:bg-gray-700 transition">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Response Panel -->
+      <div class="surface rounded-xl p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Response</h2>
+          <span id="statusBadge" class="px-3 py-1 rounded-full text-sm hidden"></span>
+        </div>
+
+        <div id="responseTime" class="text-gray-400 text-sm mb-2 hidden"></div>
+
+        <pre id="responseBody" class="surface-2 rounded-lg p-4 text-sm overflow-auto max-h-96 text-gray-300">
+Response will appear here...
+        </pre>
+      </div>
+    </div>
+
+    <!-- Test Results -->
+    <div id="testResults" class="mt-6 surface rounded-xl p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+      <div id="testList" class="space-y-2"></div>
+    </div>
+
+    <!-- Request Preview -->
+    <div class="mt-6 surface rounded-xl p-6">
+      <h2 class="text-xl font-semibold mb-4">Request Preview</h2>
+      <pre id="requestPreview" class="surface-2 rounded-lg p-4 text-sm overflow-auto text-green-400"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Set default date to tomorrow
+    document.getElementById('bookingDate').value = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    function getRequestBody() {
+      return {
+        rider_id: document.getElementById('riderId').value,
+        rider_name: document.getElementById('riderName').value,
+        rider_email: document.getElementById('riderEmail').value,
+        booking_date: document.getElementById('bookingDate').value,
+        start_time: document.getElementById('startTime').value,
+        duration_minutes: parseInt(document.getElementById('duration').value),
+        zone: document.getElementById('zone').value
+      };
+    }
+
+    function updatePreview() {
+      const body = getRequestBody();
+      document.getElementById('requestPreview').textContent = JSON.stringify(body, null, 2);
+    }
+
+    // Update preview on any input change
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', updatePreview);
+    });
+    updatePreview();
+
+    async function sendRequest() {
+      const url = document.getElementById('webhookUrl').value;
+      const body = getRequestBody();
+
+      const startTime = performance.now();
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const endTime = performance.now();
+        const data = await response.json();
+
+        showResponse(response.status, data, endTime - startTime);
+      } catch (error) {
+        showResponse(0, { error: error.message }, 0);
+      }
+    }
+
+    function showResponse(status, data, time) {
+      const badge = document.getElementById('statusBadge');
+      const responseBody = document.getElementById('responseBody');
+      const responseTime = document.getElementById('responseTime');
+
+      badge.classList.remove('hidden');
+      responseTime.classList.remove('hidden');
+
+      if (status >= 200 && status < 300) {
+        badge.className = 'px-3 py-1 rounded-full text-sm bg-green-500 text-white';
+        badge.textContent = status + ' Success';
+      } else if (status >= 400 && status < 500) {
+        badge.className = 'px-3 py-1 rounded-full text-sm bg-yellow-500 text-black';
+        badge.textContent = status + ' Client Error';
+      } else if (status >= 500) {
+        badge.className = 'px-3 py-1 rounded-full text-sm bg-red-500 text-white';
+        badge.textContent = status + ' Server Error';
+      } else {
+        badge.className = 'px-3 py-1 rounded-full text-sm bg-red-500 text-white';
+        badge.textContent = 'Connection Error';
+      }
+
+      responseTime.textContent = `Response time: ${time.toFixed(0)}ms`;
+      responseBody.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function clearResponse() {
+      document.getElementById('statusBadge').classList.add('hidden');
+      document.getElementById('responseTime').classList.add('hidden');
+      document.getElementById('responseBody').textContent = 'Response will appear here...';
+      document.getElementById('testResults').classList.add('hidden');
+    }
+
+    async function runAllTests() {
+      const url = document.getElementById('webhookUrl').value;
+      const testResults = document.getElementById('testResults');
+      const testList = document.getElementById('testList');
+
+      testResults.classList.remove('hidden');
+      testList.innerHTML = '';
+
+      const tests = [
+        {
+          name: 'Valid Booking',
+          body: {
+            rider_id: 'TEST-001',
+            rider_name: 'Test User',
+            rider_email: 'test@example.com',
+            booking_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+            start_time: '10:00',
+            duration_minutes: 60,
+            zone: 'Main Paddock'
+          },
+          expectedStatus: 201
+        },
+        {
+          name: 'Missing Fields',
+          body: { rider_name: 'Incomplete' },
+          expectedStatus: 400
+        },
+        {
+          name: 'Zero Duration',
+          body: {
+            rider_id: 'TEST-002',
+            rider_name: 'Zero Duration',
+            rider_email: 'test2@example.com',
+            booking_date: new Date(Date.now() + 86400000 * 8).toISOString().split('T')[0],
+            start_time: '11:00',
+            duration_minutes: 0
+          },
+          expectedStatus: 400
+        },
+        {
+          name: 'Different Zone',
+          body: {
+            rider_id: 'TEST-003',
+            rider_name: 'Zone Test',
+            rider_email: 'zone@example.com',
+            booking_date: new Date(Date.now() + 86400000 * 9).toISOString().split('T')[0],
+            start_time: '15:00',
+            duration_minutes: 90,
+            zone: 'Zone A'
+          },
+          expectedStatus: 201
+        }
+      ];
+
+      for (const test of tests) {
+        const result = await runTest(url, test);
+        testList.innerHTML += result;
+      }
+    }
+
+    async function runTest(url, test) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(test.body)
+        });
+
+        const passed = response.status === test.expectedStatus;
+        const statusClass = passed ? 'bg-green-500' : 'bg-red-500';
+        const statusText = passed ? 'PASS' : 'FAIL';
+
+        return `
+          <div class="surface-2 rounded-lg p-3 flex justify-between items-center">
+            <div>
+              <span class="font-medium">${test.name}</span>
+              <span class="text-gray-400 text-sm ml-2">Expected: ${test.expectedStatus}, Got: ${response.status}</span>
+            </div>
+            <span class="${statusClass} px-2 py-1 rounded text-xs text-white">${statusText}</span>
+          </div>
+        `;
+      } catch (error) {
+        return `
+          <div class="surface-2 rounded-lg p-3 flex justify-between items-center">
+            <div>
+              <span class="font-medium">${test.name}</span>
+              <span class="text-red-400 text-sm ml-2">Error: ${error.message}</span>
+            </div>
+            <span class="bg-red-500 px-2 py-1 rounded text-xs text-white">ERROR</span>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

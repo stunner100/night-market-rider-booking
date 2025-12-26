@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Admin Dashboard - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "brand-yellow": "#FFE979",
+                        "brand-black": "#000000",
+                        "brand-gray": "#1A1A1A",
+                        "brand-light-gray": "#333333",
+                        "brand-text-muted": "#9CA3AF",
+                    },
+                    fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24
+        }
+    </style>
+</head>
+
+<body class="bg-brand-black text-white font-display overflow-x-hidden min-h-screen flex flex-col">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <div class="flex-1 flex justify-center py-8 px-4 md:px-10 lg:px-8">
+        <div class="flex flex-col max-w-[1400px] w-full gap-8">
+            <!-- Header -->
+            <div class="flex flex-wrap items-end justify-between gap-4 border-b border-brand-light-gray pb-6">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Admin Dashboard</h1>
+                    <p class="text-brand-text-muted text-sm">Monitor and manage all bookings and riders</p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="clearAllBtn"
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-400 text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined text-lg">delete_forever</span>
+                        <span>Clear All Bookings</span>
+                    </button>
+                    <button id="exportBtn"
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-gray hover:bg-brand-light-gray text-white text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        <span>Export Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Analytics Section -->
+            <div id="ai-analytics-section"
+                class="bg-gradient-to-r from-purple-900/20 to-brand-gray border border-purple-500/20 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+                            <span class="material-symbols-outlined text-xl">auto_awesome</span>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">AI Demand Insights</h2>
+                            <p class="text-xs text-brand-text-muted">Powered by AI analysis</p>
+                        </div>
+                    </div>
+                    <button id="refresh-analytics"
+                        class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-lg">refresh</span>
+                    </button>
+                </div>
+
+                <div id="ai-analytics-content" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Loading state -->
+                    <div class="col-span-full flex items-center justify-center py-8">
+                        <div class="flex items-center gap-3 text-brand-text-muted">
+                            <span class="material-symbols-outlined animate-spin">sync</span>
+                            <span>Analyzing booking patterns...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Alerts -->
+                <div id="ai-alerts" class="mt-4 space-y-2 hidden">
+                    <!-- Alerts will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="p-2 rounded-lg bg-brand-light-gray text-brand-yellow">
+                            <span class="material-symbols-outlined text-xl">groups</span>
+                        </div>
+                        <p class="text-brand-text-muted font-medium">Active Riders</p>
+                    </div>
+                    <p id="activeRiders" class="text-white text-3xl font-bold pl-1">-</p>
+                </div>
+                <div class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="p-2 rounded-lg bg-brand-light-gray text-brand-yellow">
+                            <span class="material-symbols-outlined text-xl">calendar_today</span>
+                        </div>
+                        <p class="text-brand-text-muted font-medium">Bookings Today</p>
+                    </div>
+                    <p id="bookingsToday" class="text-white text-3xl font-bold pl-1">-</p>
+                </div>
+                <div class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="p-2 rounded-lg bg-brand-light-gray text-orange-400">
+                            <span class="material-symbols-outlined text-xl">pending</span>
+                        </div>
+                        <p class="text-brand-text-muted font-medium">Pending Approval</p>
+                    </div>
+                    <p id="pending" class="text-white text-3xl font-bold pl-1">-</p>
+                </div>
+            </div>
+
+            <!-- Bookings Section -->
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <h2 class="text-xl font-bold text-white">All Bookings</h2>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Filter chips -->
+                        <div class="flex gap-2">
+                            <button data-filter="all"
+                                class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-brand-yellow text-black">All</button>
+                            <button data-filter="confirmed"
+                                class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Confirmed</button>
+                            <button data-filter="pending"
+                                class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Pending</button>
+                            <button data-filter="cancelled"
+                                class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Cancelled</button>
+                        </div>
+                        <!-- Search -->
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-brand-text-muted">
+                                <span class="material-symbols-outlined text-lg">search</span>
+                            </span>
+                            <input id="searchInput" type="text" placeholder="Search by ID or name"
+                                class="pl-10 pr-4 py-2 rounded-lg bg-brand-gray border border-brand-light-gray text-white text-sm focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="overflow-x-auto rounded-xl border border-brand-light-gray">
+                    <table class="w-full text-left">
+                        <thead class="bg-brand-gray text-brand-text-muted text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 font-medium">Booking ID</th>
+                                <th class="px-4 py-3 font-medium">Rider</th>
+                                <th class="px-4 py-3 font-medium">Date</th>
+                                <th class="px-4 py-3 font-medium">Time</th>
+                                <th class="px-4 py-3 font-medium">Zone</th>
+                                <th class="px-4 py-3 font-medium">Status</th>
+                                <th class="px-4 py-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody" class="divide-y divide-brand-light-gray">
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-brand-text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between">
+                    <p id="paginationInfo" class="text-sm text-brand-text-muted">Showing 0 bookings</p>
+                    <div class="flex gap-2">
+                        <button id="prevBtn" disabled
+                            class="px-4 py-2 rounded-lg bg-brand-gray text-white text-sm font-medium disabled:opacity-50 hover:bg-brand-light-gray transition-colors">Previous</button>
+                        <button id="nextBtn"
+                            class="px-4 py-2 rounded-lg bg-brand-gray text-white text-sm font-medium disabled:opacity-50 hover:bg-brand-light-gray transition-colors">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Riders Section -->
+            <div class="flex flex-col gap-4">
+                <h2 class="text-xl font-bold text-white">New Riders</h2>
+                <div id="ridersContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <!-- Riders will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear All Confirmation Modal -->
+    <div id="clearAllModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-brand-gray w-full max-w-sm rounded-2xl shadow-2xl border border-red-500/30 overflow-hidden">
+            <div class="p-6 text-center">
+                <div class="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined text-red-400 text-4xl">warning</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Clear All Bookings?</h3>
+                <p class="text-sm text-brand-text-muted mb-4">This will permanently delete <span id="clearAllCount"
+                        class="text-red-400 font-bold">ALL</span> bookings from the system.</p>
+                <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-left">
+                    <p class="text-xs text-red-400 font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">error</span>
+                        This action cannot be undone!
+                    </p>
+                </div>
+            </div>
+            <div class="p-4 bg-white/5 flex gap-3 border-t border-brand-light-gray">
+                <button id="clearAllCancelBtn" type="button"
+                    class="flex-1 px-4 py-3 rounded-lg border border-brand-light-gray text-brand-text-muted font-bold text-sm hover:bg-white/10 transition-colors">Cancel</button>
+                <button id="clearAllConfirmBtn" type="button"
+                    class="flex-1 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2">
+                    <span id="clearAllBtnText">Delete All</span>
+                    <span id="clearAllBtnLoader" class="hidden"><svg class="animate-spin h-5 w-5"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check admin authentication
+            if (!AuthAPI.requireAdmin()) return;
+
+            let currentFilter = 'all';
+            let searchQuery = '';
+            let currentPage = 0;
+            const pageSize = 20;
+            let allBookings = [];
+
+            // DOM Elements
+            const activeRiders = document.getElementById('activeRiders');
+            const bookingsToday = document.getElementById('bookingsToday');
+            const pending = document.getElementById('pending');
+            const bookingsTableBody = document.getElementById('bookingsTableBody');
+            const ridersContainer = document.getElementById('ridersContainer');
+            const searchInput = document.getElementById('searchInput');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const exportBtn = document.getElementById('exportBtn');
+
+            // Fetch admin stats
+            async function fetchStats() {
+                try {
+                    const response = await AuthAPI.authFetch('/admin/stats');
+                    if (response.success) {
+                        const stats = response.stats;
+                        activeRiders.textContent = stats.active_riders;
+                        bookingsToday.textContent = stats.bookings_today;
+                        pending.textContent = stats.pending;
+                    }
+                } catch (error) { console.error('Error fetching stats:', error); }
+            }
+
+            // Fetch bookings
+            async function fetchBookings() {
+                try {
+                    let url = `/admin/bookings?limit=${pageSize}&offset=${currentPage * pageSize}`;
+                    if (currentFilter !== 'all') url += `&status=${currentFilter}`;
+                    if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+
+                    const response = await AuthAPI.authFetch(url);
+                    if (response.success) {
+                        allBookings = response.bookings || [];
+                        renderBookingsTable();
+                        paginationInfo.textContent = `Showing ${allBookings.length} bookings`;
+                        prevBtn.disabled = currentPage === 0;
+                        nextBtn.disabled = allBookings.length < pageSize;
+                    }
+                } catch (error) { console.error('Error fetching bookings:', error); }
+            }
+
+            // Render bookings table
+            function renderBookingsTable() {
+                if (allBookings.length === 0) {
+                    bookingsTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-brand-text-muted">No bookings found</td></tr>';
+                    return;
+                }
+
+                bookingsTableBody.innerHTML = allBookings.map(booking => {
+                    const date = new Date(booking.booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const time = `${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)}`;
+
+                    const statusClasses = {
+                        confirmed: 'bg-green-900/30 text-green-400 border-green-500/30',
+                        pending: 'bg-orange-900/30 text-orange-400 border-orange-500/30',
+                        cancelled: 'bg-red-900/30 text-red-400 border-red-500/30',
+                        completed: 'bg-blue-900/30 text-blue-400 border-blue-500/30'
+                    };
+
+                    return `
+        <tr class="hover:bg-brand-gray/50 transition-colors">
+          <td class="px-4 py-3 text-sm font-medium text-brand-yellow">${booking.booking_id}</td>
+          <td class="px-4 py-3 text-sm">${booking.rider_name}</td>
+          <td class="px-4 py-3 text-sm">${date}</td>
+          <td class="px-4 py-3 text-sm text-brand-text-muted">${time}</td>
+          <td class="px-4 py-3 text-sm">${booking.zone}</td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-1 rounded-full text-xs font-medium border ${statusClasses[booking.status] || statusClasses.pending}">
+              ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              ${booking.status === 'pending' ? `
+                <button onclick="updateStatus('${booking.booking_id}', 'confirmed')" class="p-1.5 rounded-lg bg-green-900/30 text-green-400 hover:bg-green-900/50 transition-colors" title="Approve">
+                  <span class="material-symbols-outlined text-lg">check</span>
+                </button>
+              ` : ''}
+              ${booking.status !== 'cancelled' ? `
+                <button onclick="updateStatus('${booking.booking_id}', 'cancelled')" class="p-1.5 rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-colors" title="Cancel">
+                  <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+                }).join('');
+            }
+
+            // Update booking status
+            window.updateStatus = async function (bookingId, status) {
+                const action = status === 'confirmed' ? 'approve' : 'cancel';
+                if (!confirm(`Are you sure you want to ${action} booking ${bookingId}?`)) return;
+
+                try {
+                    const response = await AuthAPI.authFetch(`/admin/bookings/${bookingId}/status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status })
+                    });
+
+                    if (response.success) {
+                        showToast(`Booking ${action}d successfully`, 'success');
+                        await fetchBookings();
+                        await fetchStats();
+                    } else {
+                        showToast(response.message || 'Failed to update booking', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                    showToast('Failed to update booking', 'error');
+                }
+            };
+
+            // Fetch recent riders
+            async function fetchRecentRiders() {
+                try {
+                    const response = await AuthAPI.authFetch('/admin/riders/recent?limit=5');
+                    if (response.success) {
+                        const riders = response.riders || [];
+                        if (riders.length === 0) {
+                            ridersContainer.innerHTML = '<p class="text-brand-text-muted col-span-full">No recent riders</p>';
+                            return;
+                        }
+                        ridersContainer.innerHTML = riders.map(rider => `
+          <div class="flex items-center gap-3 p-4 rounded-xl bg-brand-gray border border-brand-light-gray">
+            <div class="w-10 h-10 rounded-full bg-brand-light-gray bg-center bg-cover" style="background-image: url('${rider.avatar_url || 'https://via.placeholder.com/40'}');"></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-white truncate">${rider.name}</p>
+              <p class="text-xs text-brand-text-muted truncate">${rider.email}</p>
+            </div>
+          </div>
+        `).join('');
+                    }
+                } catch (error) { console.error('Error fetching riders:', error); }
+            }
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentFilter = btn.dataset.filter;
+                    currentPage = 0;
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.className = `filter-btn px-3 py-1.5 rounded-full text-xs font-medium ${b.dataset.filter === currentFilter ? 'bg-brand-yellow text-black' : 'bg-brand-gray text-white hover:bg-brand-light-gray'
+                            }`;
+                    });
+                    fetchBookings();
+                });
+            });
+
+            // Search
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchQuery = e.target.value;
+                    currentPage = 0;
+                    fetchBookings();
+                }, 300);
+            });
+
+            // Pagination
+            prevBtn.addEventListener('click', () => { if (currentPage > 0) { currentPage--; fetchBookings(); } });
+            nextBtn.addEventListener('click', () => { currentPage++; fetchBookings(); });
+
+            // Export
+            exportBtn.addEventListener('click', () => {
+                const csv = [
+                    ['Booking ID', 'Rider', 'Email', 'Date', 'Time', 'Zone', 'Status'],
+                    ...allBookings.map(b => [b.booking_id, b.rider_name, b.rider_email, b.booking_date, `${b.start_time}-${b.end_time}`, b.zone, b.status])
+                ].map(row => row.join(',')).join('\n');
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bookings_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // Clear All Bookings Modal
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const clearAllModal = document.getElementById('clearAllModal');
+            const clearAllCancelBtn = document.getElementById('clearAllCancelBtn');
+            const clearAllConfirmBtn = document.getElementById('clearAllConfirmBtn');
+            const clearAllBtnText = document.getElementById('clearAllBtnText');
+            const clearAllBtnLoader = document.getElementById('clearAllBtnLoader');
+
+            function openClearAllModal() {
+                clearAllModal.classList.remove('hidden');
+                clearAllModal.classList.add('flex');
+            }
+
+            function closeClearAllModal() {
+                clearAllModal.classList.add('hidden');
+                clearAllModal.classList.remove('flex');
+            }
+
+            function setClearAllLoading(loading) {
+                clearAllConfirmBtn.disabled = loading;
+                clearAllBtnText.classList.toggle('hidden', loading);
+                clearAllBtnLoader.classList.toggle('hidden', !loading);
+            }
+
+            clearAllBtn?.addEventListener('click', openClearAllModal);
+            clearAllCancelBtn?.addEventListener('click', closeClearAllModal);
+            clearAllModal?.addEventListener('click', (e) => { if (e.target === clearAllModal) closeClearAllModal(); });
+
+            clearAllConfirmBtn?.addEventListener('click', async () => {
+                setClearAllLoading(true);
+
+                try {
+                    const response = await AuthAPI.authFetch('/admin/bookings/clear-all', {
+                        method: 'DELETE'
+                    });
+
+                    if (response.success) {
+                        closeClearAllModal();
+                        showToast(`Deleted ${response.deleted_count} bookings`, 'success');
+                        await fetchBookings();
+                        await fetchStats();
+                    } else {
+                        showToast(response.message || 'Failed to clear bookings', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error clearing bookings:', error);
+                    showToast('Failed to clear bookings', 'error');
+                } finally {
+                    setClearAllLoading(false);
+                }
+            });
+
+            // Toast
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-brand-gray'
+                    }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // AI Analytics Functions
+            async function fetchAIAnalytics() {
+                const content = document.getElementById('ai-analytics-content');
+                const alertsContainer = document.getElementById('ai-alerts');
+
+                try {
+                    const response = await AuthAPI.authFetch('/ai/analytics');
+
+                    if (response.success) {
+                        renderAIAnalytics(response, content);
+                        renderAIAlerts(response.alerts || [], alertsContainer);
+                    } else {
+                        content.innerHTML = `
+                            <div class="col-span-full text-center py-4 text-brand-text-muted">
+                                <p>AI analytics unavailable</p>
+                                <p class="text-xs mt-1">AI analytics are temporarily unavailable</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('AI Analytics Error:', error);
+                    content.innerHTML = `
+                        <div class="col-span-full text-center py-4 text-brand-text-muted">
+                            <p>Unable to load AI analytics</p>
+                            <button onclick="fetchAIAnalytics()" class="mt-2 text-purple-400 hover:underline text-sm">Try again</button>
+                        </div>
+                    `;
+                }
+            }
+
+            function renderAIAnalytics(data, container) {
+                const patterns = data.patterns || {};
+                const predictions = data.predictions?.next_7_days || [];
+                const zones = data.zone_analysis || {};
+
+                let html = '';
+
+                // Pattern insights card
+                html += `
+                    <div class="bg-black/30 rounded-xl p-4 border border-white/5">
+                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3">Booking Patterns</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Busiest Day</span>
+                                <span class="text-sm text-white font-medium">${patterns.busiest_day || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Busiest Hour</span>
+                                <span class="text-sm text-white font-medium">${patterns.busiest_hour || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Quietest Day</span>
+                                <span class="text-sm text-white font-medium">${patterns.quietest_day || '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Avg Daily Bookings</span>
+                                <span class="text-sm text-white font-medium">${patterns.average_daily_bookings || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Predictions card
+                html += `
+                    <div class="bg-black/30 rounded-xl p-4 border border-white/5">
+                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3">7-Day Forecast</h3>
+                        <div class="space-y-2">
+                `;
+
+                predictions.slice(0, 5).forEach(pred => {
+                    const date = new Date(pred.date);
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const barWidth = Math.min(100, (pred.predicted_bookings / 20) * 100);
+
+                    html += `
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 w-16">${dayName} ${dateStr}</span>
+                            <div class="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="text-xs text-white font-medium w-8 text-right">${pred.predicted_bookings || 0}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+
+                // Zone analysis card
+                html += `
+                    <div class="bg-black/30 rounded-xl p-4 border border-white/5">
+                        <h3 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-3">Zone Popularity</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-green-400 text-sm">trending_up</span>
+                                <span class="text-sm text-gray-400">Most Popular:</span>
+                                <span class="text-sm text-white font-medium">${zones.most_popular || '-'}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-red-400 text-sm">trending_down</span>
+                                <span class="text-sm text-gray-400">Least Popular:</span>
+                                <span class="text-sm text-white font-medium">${zones.least_popular || '-'}</span>
+                            </div>
+                        </div>
+                        ${data.recommendations?.length > 0 ? `
+                            <div class="mt-4 pt-3 border-t border-white/10">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">AI Recommendations</h4>
+                                <ul class="space-y-1 text-xs text-gray-400">
+                                    ${data.recommendations.slice(0, 3).map(rec => `<li class="flex items-start gap-1"><span class="text-purple-400">•</span> ${rec}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            function renderAIAlerts(alerts, container) {
+                if (!alerts || alerts.length === 0) {
+                    container.classList.add('hidden');
+                    return;
+                }
+
+                container.classList.remove('hidden');
+
+                const severityColors = {
+                    high: 'bg-red-900/30 border-red-500/30 text-red-400',
+                    medium: 'bg-orange-900/30 border-orange-500/30 text-orange-400',
+                    low: 'bg-blue-900/30 border-blue-500/30 text-blue-400'
+                };
+
+                const severityIcons = {
+                    high: 'warning',
+                    medium: 'info',
+                    low: 'tips_and_updates'
+                };
+
+                container.innerHTML = `
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">AI Alerts</h3>
+                    ${alerts.map(alert => `
+                        <div class="flex items-start gap-3 p-3 rounded-lg border ${severityColors[alert.severity] || severityColors.low}">
+                            <span class="material-symbols-outlined text-lg">${severityIcons[alert.severity] || 'info'}</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">${alert.message}</p>
+                                ${alert.date ? `<p class="text-xs opacity-70 mt-1">${alert.date}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            // Refresh analytics button
+            document.getElementById('refresh-analytics')?.addEventListener('click', fetchAIAnalytics);
+
+            // Initial load
+            await Promise.all([fetchStats(), fetchBookings(), fetchRecentRiders()]);
+
+            // Load AI analytics (non-blocking)
+            fetchAIAnalytics();
+        });
+    </script>
+
+</body>
+
+</html>

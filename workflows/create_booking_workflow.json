@@ -1,0 +1,460 @@
+{
+  "name": "Night Market - Create New Booking",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-booking",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Booking Request Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "create-booking-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "validate-rider-id",
+              "leftValue": "={{ $json.body.rider_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "validate-date",
+              "leftValue": "={{ $json.body.booking_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "validate-start-time",
+              "leftValue": "={{ $json.body.start_time }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "validate-duration",
+              "leftValue": "={{ $json.body.duration_minutes }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validate-input",
+      "name": "Validate Booking Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": false,\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"Missing required fields. Please provide rider_id, booking_date, start_time, and duration_minutes.\",\n  \"required_fields\": {\n    \"rider_id\": \"string - Rider's unique identifier\",\n    \"booking_date\": \"string - Date in YYYY-MM-DD format\",\n    \"start_time\": \"string - Time in HH:MM format\",\n    \"duration_minutes\": \"number - Duration in minutes (30, 45, 60, or 90)\"\n  }\n} }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "validation-error-response",
+      "name": "Validation Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [440, 480]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rider-id",
+              "name": "rider_id",
+              "value": "={{ $json.body.rider_id }}",
+              "type": "string"
+            },
+            {
+              "id": "booking-date",
+              "name": "booking_date",
+              "value": "={{ $json.body.booking_date }}",
+              "type": "string"
+            },
+            {
+              "id": "start-time",
+              "name": "start_time",
+              "value": "={{ $json.body.start_time }}",
+              "type": "string"
+            },
+            {
+              "id": "duration",
+              "name": "duration_minutes",
+              "value": "={{ $json.body.duration_minutes }}",
+              "type": "number"
+            },
+            {
+              "id": "end-time",
+              "name": "end_time",
+              "value": "={{ DateTime.fromFormat($json.body.booking_date + ' ' + $json.body.start_time, 'yyyy-MM-dd HH:mm').plus({ minutes: $json.body.duration_minutes }).toFormat('HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "zone",
+              "name": "zone",
+              "value": "={{ $json.body.zone || 'Main Paddock' }}",
+              "type": "string"
+            },
+            {
+              "id": "rider-email",
+              "name": "rider_email",
+              "value": "={{ $json.body.rider_email }}",
+              "type": "string"
+            },
+            {
+              "id": "rider-name",
+              "name": "rider_name",
+              "value": "={{ $json.body.rider_name }}",
+              "type": "string"
+            },
+            {
+              "id": "hourly-rate",
+              "name": "hourly_rate",
+              "value": 20,
+              "type": "number"
+            },
+            {
+              "id": "total-cost",
+              "name": "total_cost",
+              "value": "={{ ($json.body.duration_minutes / 60) * 20 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prepare-booking-data",
+      "name": "Prepare Booking Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH daily_stats AS (\n  SELECT COUNT(*) as daily_count\n  FROM bookings\n  WHERE booking_date = '{{ $json.booking_date }}'\n    AND status NOT IN ('cancelled')\n)\nSELECT\n  (SELECT daily_count FROM daily_stats) as daily_count,\n  CASE\n    WHEN (SELECT daily_count FROM daily_stats) < 20 THEN 0\n    ELSE (\n      SELECT COUNT(*)\n      FROM bookings\n      WHERE booking_date = '{{ $json.booking_date }}'\n        AND status NOT IN ('cancelled')\n        AND start_time < '{{ $json.end_time }}'\n        AND end_time > '{{ $json.start_time }}'\n    )\n  END as conflicting_bookings;",
+        "options": {}
+      },
+      "id": "check-availability",
+      "name": "Check Time Slot Availability",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 300],
+      "credentials": {
+        "postgres": {
+          "id": "night-market-postgres",
+          "name": "Night Market DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-availability",
+              "leftValue": "={{ $json.conflicting_bookings }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "is-available",
+      "name": "Is Time Slot Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": false,\n  \"error\": \"SLOT_UNAVAILABLE\",\n  \"message\": \"Daily capacity reached (20 bikes). Only completely empty time slots are available.\",\n  \"daily_count\": $('Check Time Slot Availability').item.json.daily_count,\n  \"daily_limit\": 20,\n  \"requested_slot\": {\n    \"date\": $('Prepare Booking Data').item.json.booking_date,\n    \"start_time\": $('Prepare Booking Data').item.json.start_time,\n    \"end_time\": $('Prepare Booking Data').item.json.end_time,\n    \"zone\": $('Prepare Booking Data').item.json.zone\n  }\n} }}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "unavailable-response",
+      "name": "Slot Unavailable Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1100, 480]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "booking-id",
+              "name": "booking_id",
+              "value": "={{ 'BK-' + Math.floor(1000 + Math.random() * 9000).toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "value": "confirmed",
+              "type": "string"
+            },
+            {
+              "id": "created-at",
+              "name": "created_at",
+              "value": "={{ DateTime.now().toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {},
+        "selectedFields": "rider_id,booking_date,start_time,end_time,duration_minutes,zone,rider_email,rider_name,hourly_rate,total_cost"
+      },
+      "id": "generate-booking-id",
+      "name": "Generate Booking ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO bookings (\n  booking_id,\n  rider_id,\n  rider_name,\n  rider_email,\n  booking_date,\n  start_time,\n  end_time,\n  duration_minutes,\n  zone,\n  hourly_rate,\n  total_cost,\n  status,\n  created_at\n) VALUES (\n  '{{ $json.booking_id }}',\n  '{{ $json.rider_id }}',\n  '{{ $json.rider_name }}',\n  '{{ $json.rider_email }}',\n  '{{ $json.booking_date }}',\n  '{{ $json.start_time }}',\n  '{{ $json.end_time }}',\n  {{ $json.duration_minutes }},\n  '{{ $json.zone }}',\n  {{ $json.hourly_rate }},\n  {{ $json.total_cost }},\n  '{{ $json.status }}',\n  '{{ $json.created_at }}'\n)\nRETURNING *;",
+        "options": {}
+      },
+      "id": "insert-booking",
+      "name": "Insert Booking to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1320, 300],
+      "credentials": {
+        "postgres": {
+          "id": "night-market-postgres",
+          "name": "Night Market DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "bookings@nightmarket.com",
+        "toEmail": "={{ $json.rider_email }}",
+        "subject": "=Booking Confirmed - {{ $json.booking_id }} | Night Market Riding",
+        "emailFormat": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0A0A0A; color: #FFFFFF; margin: 0; padding: 20px; }\n    .container { max-width: 600px; margin: 0 auto; background-color: #121212; border-radius: 12px; padding: 30px; }\n    .header { text-align: center; border-bottom: 2px solid #FDE047; padding-bottom: 20px; margin-bottom: 20px; }\n    .logo { color: #FDE047; font-size: 28px; font-weight: bold; }\n    .confirmation-badge { background-color: #22C55E; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-top: 10px; font-size: 14px; }\n    .booking-details { background-color: #1A1A1A; border-radius: 8px; padding: 20px; margin: 20px 0; }\n    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }\n    .detail-row:last-child { border-bottom: none; }\n    .detail-label { color: #9CA3AF; }\n    .detail-value { color: #FFFFFF; font-weight: 600; }\n    .total-row { background-color: #FDE047; color: #000000; padding: 15px; border-radius: 8px; margin-top: 20px; }\n    .footer { text-align: center; margin-top: 30px; color: #9CA3AF; font-size: 12px; }\n    .btn { display: inline-block; background-color: #FDE047; color: #000000; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <div class=\"logo\">Night Market</div>\n      <div class=\"confirmation-badge\">Booking Confirmed</div>\n    </div>\n    \n    <p>Hello {{ $json.rider_name }},</p>\n    <p>Your riding session has been confirmed! Here are your booking details:</p>\n    \n    <div class=\"booking-details\">\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Booking ID</span>\n        <span class=\"detail-value\">{{ $json.booking_id }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Date</span>\n        <span class=\"detail-value\">{{ DateTime.fromISO($json.booking_date).toFormat('cccc, MMMM d, yyyy') }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Time</span>\n        <span class=\"detail-value\">{{ $json.start_time }} - {{ $json.end_time }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Duration</span>\n        <span class=\"detail-value\">{{ $json.duration_minutes }} minutes</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Zone</span>\n        <span class=\"detail-value\">{{ $json.zone }}</span>\n      </div>\n    </div>\n    \n    <div class=\"total-row\">\n      <div style=\"display: flex; justify-content: space-between;\">\n        <span><strong>Total Amount</strong></span>\n        <span><strong>${{ $json.total_cost.toFixed(2) }}</strong></span>\n      </div>\n    </div>\n    \n    <div style=\"text-align: center;\">\n      <a href=\"https://nightmarket.com/my-bookings\" class=\"btn\">View My Bookings</a>\n    </div>\n    \n    <div class=\"footer\">\n      <p>Need to make changes? You can reschedule or cancel your booking from your dashboard.</p>\n      <p>&copy; 2024 Night Market Riding. All rights reserved.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "send-confirmation-email",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1540, 300],
+      "credentials": {
+        "smtp": {
+          "id": "SMTP_CREDENTIAL_ID",
+          "name": "Night Market SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": true,\n  \"message\": \"Booking created successfully\",\n  \"booking\": {\n    \"booking_id\": $json.booking_id,\n    \"rider_id\": $json.rider_id,\n    \"rider_name\": $json.rider_name,\n    \"booking_date\": $json.booking_date,\n    \"start_time\": $json.start_time,\n    \"end_time\": $json.end_time,\n    \"duration_minutes\": $json.duration_minutes,\n    \"zone\": $json.zone,\n    \"total_cost\": $json.total_cost,\n    \"status\": $json.status,\n    \"created_at\": $json.created_at\n  },\n  \"confirmation_email_sent\": true\n} }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error || 'An unexpected error occurred while processing the booking.' }}"
+      },
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 600]
+    },
+    {
+      "parameters": {
+        "channel": "#booking-alerts",
+        "text": "=:warning: *Booking Workflow Error*\n\n*Error:* {{ $json.execution.error.message }}\n*Workflow:* {{ $json.workflow.name }}\n*Execution ID:* {{ $json.execution.id }}\n*Time:* {{ DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss') }}\n\n<{{ $json.execution.url }}|View Execution Details>",
+        "otherOptions": {}
+      },
+      "id": "notify-error-slack",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [220, 600],
+      "credentials": {
+        "slackApi": {
+          "id": "SLACK_CREDENTIAL_ID",
+          "name": "Night Market Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Booking Request Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Check Time Slot Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Time Slot Availability": {
+      "main": [
+        [
+          {
+            "node": "Is Time Slot Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Time Slot Available?": {
+      "main": [
+        [
+          {
+            "node": "Generate Booking ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slot Unavailable Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Booking ID": {
+      "main": [
+        [
+          {
+            "node": "Insert Booking to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Booking to Database": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "booking",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "night-market",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+}

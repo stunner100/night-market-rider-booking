@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+  <title>Night Market Booking Schedule</title>
+  <!-- Mobile PWA Meta Tags -->
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Night Market" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+
+  <!-- Preconnect to external domains for faster resource loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+
+  <!-- Mobile CSS -->
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <!-- Load Material Symbols with preload for better performance -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" />
+  </noscript>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "brand-yellow": "#FDE047", // Matches the yellow in the logo
+            "brand-black": "#000000",
+            "brand-gray": "#1A1A1A",
+            "brand-surface": "#121212",
+            "primary": "#FDE047",
+            "secondary": "#FFFFFF",
+            "background-light": "#F8F8F8",
+            "background-dark": "#050505",
+            "surface-light": "#FFFFFF",
+            "surface-dark": "#0A0A0A",
+            "text-dark": "#E5E5E5",
+          },
+          fontFamily: {
+            "display": ["Outfit", "sans-serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "md": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "2xl": "1.5rem",
+            "3xl": "2rem",
+            "full": "9999px"
+          },
+          boxShadow: {
+            'glow': '0 0 20px rgba(253, 224, 71, 0.15)',
+            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-display {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    /* Skeleton loader animation */
+    .skeleton {
+      background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .skeleton-text {
+      height: 1em;
+      border-radius: 4px;
+    }
+
+    .skeleton-block {
+      border-radius: 8px;
+    }
+
+    /* Modal slide up animation */
+    @keyframes modalSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .animate-modalSlideUp {
+      animation: modalSlideUp 0.25s ease-out;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-background-dark text-text-dark min-h-screen flex flex-col font-body selection:bg-brand-yellow selection:text-black transition-colors duration-300">
+  <!-- Auth Script -->
+  <script src="../js/auth.js"></script>
+  <!-- Navigation -->
+  <script src="../js/navigation.js"></script>
+  <main class="flex-1 max-w-7xl mx-auto w-full p-3 md:p-8 flex flex-col gap-4 md:gap-8">
+    <div class="flex flex-col gap-4 md:gap-6">
+      <!-- Mobile: Compact header -->
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-baseline gap-2 md:gap-4">
+          <h2 id="monthYearHeader" class="text-3xl md:text-5xl font-display font-bold tracking-tight text-white">Loading
+            <span class="text-gray-600 font-light">...</span></h2>
+          <span id="weekBadge"
+            class="bg-white/10 text-brand-yellow px-2 md:px-3 py-0.5 md:py-1 rounded-md font-medium text-xs md:text-sm border border-white/5">Week
+            --</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 md:gap-4">
+          <div class="flex items-center bg-surface-dark border border-white/10 rounded-full p-1 md:p-1.5">
+            <button id="prevWeekBtn"
+              class="size-8 md:size-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+              <span class="material-symbols-outlined text-lg md:text-2xl">chevron_left</span>
+            </button>
+            <button id="todayBtn"
+              class="px-3 md:px-5 text-xs md:text-sm font-bold text-white uppercase tracking-wide hover:text-brand-yellow transition-colors">
+              This Week
+            </button>
+            <button id="nextWeekBtn"
+              class="size-8 md:size-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+              <span class="material-symbols-outlined text-lg md:text-2xl">chevron_right</span>
+            </button>
+          </div>
+          <span id="weekDateRange" class="text-gray-400 font-medium text-xs md:text-sm tracking-wide">--- - ---</span>
+        </div>
+      </div>
+
+      <!-- Controls row: Legend, Capacity Badge, and New Booking button -->
+      <div class="flex flex-col-reverse md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-5">
+        <!-- Legend - scrollable on mobile -->
+        <div
+          class="flex items-center gap-3 md:gap-6 bg-surface-dark px-3 md:px-6 py-2 md:py-3 rounded-full border border-white/10 text-xs md:text-sm overflow-x-auto hide-scrollbar">
+          <div class="flex items-center gap-1.5 md:gap-2.5 whitespace-nowrap">
+            <div class="size-2 rounded-full bg-gray-700"></div>
+            <span class="text-gray-400 font-medium">Available</span>
+          </div>
+          <div class="flex items-center gap-1.5 md:gap-2.5 whitespace-nowrap">
+            <div class="size-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]"></div>
+            <span class="text-gray-400 font-medium">Booked</span>
+          </div>
+          <div class="flex items-center gap-1.5 md:gap-2.5 whitespace-nowrap">
+            <div class="size-2 rounded-full bg-brand-yellow shadow-[0_0_10px_rgba(253,224,71,0.5)]"></div>
+            <span class="text-white font-bold">My Rides</span>
+          </div>
+        </div>
+
+        <!-- New Booking button - full width on mobile -->
+        <button id="newBookingBtn"
+          class="w-full md:w-auto bg-brand-yellow hover:bg-[#EACE40] text-black px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-bold tracking-wide shadow-[0_10px_40px_-10px_rgba(253,224,71,0.2)] flex items-center justify-center gap-2 md:gap-3 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 active:scale-95 group">
+          <span
+            class="bg-black/10 p-1 rounded-full flex items-center justify-center transition-colors group-hover:bg-black/20">
+            <span class="material-symbols-outlined text-lg md:text-xl font-bold">add</span>
+          </span>
+          <span class="font-display uppercase tracking-wider">New Booking</span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="flex-1 bg-surface-dark border border-white/10 rounded-3xl md:rounded-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col relative">
+      <!-- Mobile scroll hint -->
+      <div
+        class="md:hidden flex items-center justify-center gap-2 py-2 px-4 bg-brand-yellow/10 text-brand-yellow text-xs font-medium border-b border-white/10">
+        <span class="material-symbols-outlined text-sm">swipe</span>
+        <span>Swipe to see all days</span>
+      </div>
+      <div class="overflow-x-auto md:overflow-x-visible hide-scrollbar">
+        <div
+          class="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] border-b border-white/10 sticky top-0 z-30 bg-surface-dark min-w-[700px] md:min-w-0">
+          <div class="p-2 md:p-4 border-r border-white/10 bg-white/5 flex items-center justify-center">
+            <span class="material-symbols-outlined text-gray-600 text-base md:text-2xl">schedule</span>
+          </div>
+          <div id="dayHeaders" class="grid grid-cols-7 divide-x divide-white/5">
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Mon</div>
+              <div class="text-2xl font-display font-medium text-white group-hover:text-brand-yellow transition-colors">
+                16
+              </div>
+            </div>
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Tue</div>
+              <div class="text-2xl font-display font-medium text-white group-hover:text-brand-yellow transition-colors">
+                17
+              </div>
+            </div>
+            <div class="py-5 text-center relative bg-brand-yellow/5 group cursor-pointer">
+              <div class="text-[10px] text-brand-yellow font-black uppercase tracking-widest mb-1.5">Wed</div>
+              <div class="text-2xl font-display font-bold text-brand-yellow">18</div>
+              <div
+                class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-brand-yellow rounded-full mb-1.5 shadow-[0_0_10px_rgba(253,224,71,0.8)]">
+              </div>
+            </div>
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Thu</div>
+              <div class="text-2xl font-display font-medium text-white group-hover:text-brand-yellow transition-colors">
+                19
+              </div>
+            </div>
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">Fri</div>
+              <div class="text-2xl font-display font-medium text-white group-hover:text-brand-yellow transition-colors">
+                20
+              </div>
+            </div>
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-1.5">Sat</div>
+              <div class="text-2xl font-display font-medium text-gray-500">21</div>
+            </div>
+            <div class="py-5 text-center group cursor-pointer hover:bg-white/5 transition-colors">
+              <div class="text-[10px] text-gray-600 uppercase font-bold tracking-widest mb-1.5">Sun</div>
+              <div class="text-2xl font-display font-medium text-gray-500">22</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- Close scrollable header wrapper -->
+      <div
+        class="flex-1 overflow-y-auto overflow-x-auto relative h-[500px] md:h-[650px] bg-surface-dark hide-scrollbar">
+        <div class="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] min-h-max relative min-w-[700px] md:min-w-0">
+          <div
+            class="flex flex-col border-r border-white/10 bg-white/5 text-[10px] md:text-xs font-medium text-gray-500 select-none">
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">08:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">09:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">10:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">11:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">12:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">13:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">14:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">15:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">16:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">17:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">18:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">19:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">20:00</div>
+            <div class="h-24 border-b border-white/5 relative p-3 text-right font-mono">21:00</div>
+            <div class="h-24 relative p-3 text-right font-mono">22:00</div>
+          </div>
+          <div id="scheduleGrid" class="grid grid-cols-7 divide-x divide-white/5 relative">
+            <!-- Current time indicator -->
+            <div id="currentTimeIndicator"
+              class="absolute left-0 w-full z-20 pointer-events-none flex items-center hidden">
+              <div class="relative w-full">
+                <div
+                  class="absolute -left-1.5 top-[-5px] size-3 bg-brand-yellow rounded-full ring-4 ring-black z-30 shadow-[0_0_10px_rgba(253,224,71,0.8)]">
+                </div>
+                <div class="w-full h-[2px] bg-brand-yellow shadow-[0_0_8px_rgba(253,224,71,0.5)]"></div>
+              </div>
+            </div>
+            <!-- Day columns will be populated dynamically -->
+            <div class="relative h-[1440px] border-b border-white/5" data-day="0"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="1"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="2"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="3"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="4"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="5"></div>
+            <div class="relative h-[1440px] border-b border-white/5" data-day="6"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Booking Modal -->
+    <div id="bookingModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+      <div
+        class="bg-surface-dark w-full max-w-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden transform scale-100 transition-all">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+          <h3 class="text-xl font-display font-bold text-white">New Booking</h3>
+          <button id="closeModalBtn" class="text-gray-400 hover:text-white transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form id="bookingForm" class="p-6 space-y-6">
+          <!-- Date Selection -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Date</label>
+            <div class="relative">
+              <input id="bookingDate" name="booking_date" type="date"
+                class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all cursor-pointer"
+                required />
+              <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+                onclick="document.getElementById('bookingDate').showPicker()">
+                <span class="material-symbols-outlined text-lg">calendar_month</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone Selection -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Riding Zone</label>
+            <div class="relative">
+              <select id="zoneSelect" name="zone"
+                class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold appearance-none transition-all">
+                <option value="Main Campus">Main Campus</option>
+                <option value="Diaspora">Diaspora</option>
+                <option value="Night Market">Night Market</option>
+                <option value="Pent & Beyond">Pent & Beyond</option>
+              </select>
+              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                <span class="material-symbols-outlined text-sm">expand_more</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start Time & End Time -->
+          <div class="grid grid-cols-2 gap-5">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Start Time</label>
+              <div class="relative">
+                <input id="startTime" name="start_time"
+                  class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all"
+                  type="time" value="14:00" required />
+                <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+                  onclick="document.getElementById('startTime').showPicker()">
+                  <span class="material-symbols-outlined text-lg">schedule</span>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">End Time</label>
+              <div class="relative">
+                <input id="endTime" name="end_time"
+                  class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all"
+                  type="time" value="15:00" required />
+                <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+                  onclick="document.getElementById('endTime').showPicker()">
+                  <span class="material-symbols-outlined text-lg">schedule</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+          <!-- Error Message -->
+          <div id="errorMessage"
+            class="hidden bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">error</span>
+              <span id="errorText">An error occurred</span>
+            </div>
+          </div>
+        </form>
+
+        <!-- Actions -->
+        <div class="p-4 bg-white/5 flex gap-3 border-t border-white/10">
+          <button id="cancelBookingBtn" type="button"
+            class="flex-1 px-4 py-3.5 rounded-xl border border-white/10 text-gray-300 font-bold text-sm hover:bg-white/10 transition-colors uppercase tracking-wide">Cancel</button>
+          <button id="confirmBookingBtn" type="submit" form="bookingForm"
+            class="flex-1 px-4 py-3.5 rounded-xl bg-brand-yellow text-black font-black text-sm hover:bg-[#EACE40] shadow-lg shadow-yellow-400/20 transition-all transform hover:-translate-y-0.5 uppercase tracking-wide flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span id="confirmBtnText">Confirm</span>
+            <span id="confirmBtnLoader" class="hidden">
+              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast"
+      class="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+      <span class="material-symbols-outlined">check_circle</span>
+      <div>
+        <div class="font-bold">Booking Confirmed!</div>
+        <div class="text-sm opacity-90" id="toastBookingId">Booking ID: #BK-0000</div>
+      </div>
+    </div>
+
+    <!-- Booking API Script -->
+    <script src="../js/booking-api.js"></script>
+    <script>
+        (function () {
+          // Configuration - Use relative URL for production
+          const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
+          const API_URL = API_BASE + '/bookings';
+
+          // Get current user from auth (or guest fallback)
+          function getCurrentUser() {
+            try {
+              if (typeof AuthAPI !== 'undefined' && AuthAPI.isLoggedIn()) {
+                const user = AuthAPI.getCurrentUser();
+                if (user && user.rider_id) {
+                  return {
+                    rider_id: user.rider_id || 'UNKNOWN',
+                    rider_name: user.name || 'Rider',
+                    rider_email: user.email || 'rider@nightmarket.com'
+                  };
+                }
+              }
+            } catch (e) {
+              console.error('Error getting current user:', e);
+            }
+            // Guest fallback
+            return {
+              rider_id: 'GUEST-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+              rider_name: 'Guest Rider',
+              rider_email: 'guest@nightmarket.com'
+            };
+          }
+
+          // Current week offset (0 = this week, -1 = last week, 1 = next week)
+          let weekOffset = 0;
+
+          // DOM Elements
+          const modal = document.getElementById('bookingModal');
+          const form = document.getElementById('bookingForm');
+          const closeModalBtn = document.getElementById('closeModalBtn');
+          const cancelBookingBtn = document.getElementById('cancelBookingBtn');
+          const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+          const endTimeInput = document.getElementById('endTime');
+
+          const errorMessage = document.getElementById('errorMessage');
+          const errorText = document.getElementById('errorText');
+          const successToast = document.getElementById('successToast');
+          const toastBookingId = document.getElementById('toastBookingId');
+          const bookingDateInput = document.getElementById('bookingDate');
+          const startTimeInput = document.getElementById('startTime');
+
+          // Header elements
+          const monthYearHeader = document.getElementById('monthYearHeader');
+          const weekBadge = document.getElementById('weekBadge');
+          const weekDateRange = document.getElementById('weekDateRange');
+          const prevWeekBtn = document.getElementById('prevWeekBtn');
+          const nextWeekBtn = document.getElementById('nextWeekBtn');
+          const todayBtn = document.getElementById('todayBtn');
+
+          // Initialize API
+          BookingAPI.setWebhookUrl(API_URL);
+
+          // Get week dates for given offset
+          function getWeekDates(offset = 0) {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + (offset * 7));
+
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+              const date = new Date(monday);
+              date.setDate(monday.getDate() + i);
+              dates.push(date);
+            }
+            return dates;
+          }
+
+          // Format date for API
+          function formatDate(date) {
+            return date.toISOString().split('T')[0];
+          }
+
+          // Get ISO week number
+          function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+          }
+
+          // Update header with current week info
+          function updateHeader() {
+            const weekDates = getWeekDates(weekOffset);
+            const monday = weekDates[0];
+            const sunday = weekDates[6];
+
+            // Month and year - use monday's month  
+            const monthName = monday.toLocaleString('en-US', { month: 'long' });
+            const year = monday.getFullYear();
+            monthYearHeader.innerHTML = `${monthName} <span class="text-gray-600 font-light">${year}</span>`;
+
+            // Week number
+            weekBadge.textContent = `Week ${getWeekNumber(monday)}`;
+
+            // Date range
+            const startStr = monday.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+            const endStr = sunday.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+            weekDateRange.textContent = `${startStr} - ${endStr}`;
+          }
+
+          // Update day header cells
+          function updateDayHeaders() {
+            const weekDates = getWeekDates(weekOffset);
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const dayHeaders = document.getElementById('dayHeaders');
+            const today = new Date();
+            const todayStr = formatDate(today);
+
+            dayHeaders.innerHTML = weekDates.map((date, index) => {
+              const isToday = formatDate(date) === todayStr;
+              const isWeekend = index >= 5;
+              const dayNum = date.getDate();
+              const dateStr = formatDate(date);
+
+              return `
+        <div class="py-3 md:py-5 text-center relative ${isToday ? 'bg-brand-yellow/5' : ''} group cursor-pointer hover:bg-white/5 transition-colors" data-date="${dateStr}">
+          <div class="text-[10px] ${isToday ? 'text-brand-yellow font-black' : isWeekend ? 'text-gray-600' : 'text-gray-500'} uppercase font-bold tracking-widest mb-1 md:mb-1.5">${dayNames[index]}</div>
+          <div class="text-lg md:text-2xl font-display ${isToday ? 'font-bold text-brand-yellow' : isWeekend ? 'font-medium text-gray-500' : 'font-medium text-white'} group-hover:text-brand-yellow transition-colors">${dayNum}</div>
+          ${isToday ? '<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-brand-yellow rounded-full mb-1 md:mb-1.5 shadow-[0_0_10px_rgba(253,224,71,0.8)]"></div>' : ''}
+        </div>
+      `;
+            }).join('');
+
+            // Add click handlers to day headers
+            dayHeaders.querySelectorAll('[data-date]').forEach(dayEl => {
+              dayEl.addEventListener('click', () => {
+                const dateStr = dayEl.dataset.date;
+                openModalWithDate(dateStr);
+              });
+            });
+          }
+
+          // Open modal with pre-set date
+          function openModalWithDate(dateStr, timeStr = null) {
+            bookingDateInput.value = dateStr;
+            if (timeStr) {
+              startTimeInput.value = timeStr;
+              // Set end time to 1 hour after start time
+              const [h, m] = timeStr.split(':').map(Number);
+              const endHour = h + 1;
+              endTimeInput.value = `${String(endHour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            hideError();
+          }
+
+          // Week navigation
+          prevWeekBtn?.addEventListener('click', () => {
+            weekOffset--;
+            refreshSchedule();
+          });
+
+          nextWeekBtn?.addEventListener('click', () => {
+            weekOffset++;
+            refreshSchedule();
+          });
+
+          todayBtn?.addEventListener('click', () => {
+            weekOffset = 0;
+            refreshSchedule();
+          });
+
+          // Refresh all schedule data
+          function refreshSchedule() {
+            updateHeader();
+            updateDayHeaders();
+            loadScheduleBookings();
+            setupTimeSlotClicks();
+          }
+
+          // Set default date and time
+          function setDefaultDate() {
+            const today = new Date();
+            const dateStr = BookingAPI.formatDateForAPI(today);
+            bookingDateInput.value = dateStr;
+            startTimeInput.value = '10:00';
+            endTimeInput.value = '11:00';
+          }
+
+          // New Booking button
+          const newBookingBtn = document.getElementById('newBookingBtn');
+          newBookingBtn?.addEventListener('click', () => {
+            setDefaultDate();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            hideError();
+          });
+
+          // Close modal functions
+          function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            hideError();
+            resetForm();
+          }
+
+          closeModalBtn?.addEventListener('click', closeModal);
+          cancelBookingBtn?.addEventListener('click', closeModal);
+          modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+
+
+          function resetForm() {
+            form?.reset();
+            setDefaultDate();
+          }
+
+          // Error handling
+          function showError(message) { errorText.textContent = message; errorMessage.classList.remove('hidden'); }
+          function hideError() { errorMessage.classList.add('hidden'); }
+
+          // Success toast
+          function showSuccessToast(bookingId) {
+            toastBookingId.textContent = `Booking ID: #${bookingId}`;
+            successToast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { successToast.classList.add('translate-y-20', 'opacity-0'); }, 5000);
+            loadScheduleBookings(); // Refresh schedule
+          }
+
+          // Loading state
+          function setLoading(isLoading) {
+            const btnText = document.getElementById('confirmBtnText');
+            const btnLoader = document.getElementById('confirmBtnLoader');
+            confirmBookingBtn.disabled = isLoading;
+            btnText.classList.toggle('hidden', isLoading);
+            btnLoader.classList.toggle('hidden', !isLoading);
+          }
+
+          // Handle form submission
+          form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+            setLoading(true);
+
+            // Calculate duration from start and end time
+            const [startH, startM] = startTimeInput.value.split(':').map(Number);
+            const [endH, endM] = endTimeInput.value.split(':').map(Number);
+            const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+
+            if (durationMinutes <= 0) {
+              showError('End time must be after start time');
+              setLoading(false);
+              return;
+            }
+
+            const currentUser = getCurrentUser();
+            const bookingData = {
+              rider_id: currentUser.rider_id,
+              rider_name: currentUser.rider_name,
+              rider_email: currentUser.rider_email,
+              booking_date: bookingDateInput.value,
+              start_time: startTimeInput.value,
+              duration_minutes: durationMinutes,
+              zone: document.getElementById('zoneSelect').value
+            };
+
+            try {
+              console.log('Sending booking data:', bookingData);
+              const result = await BookingAPI.createBooking(bookingData);
+              console.log('Booking result:', result);
+              if (result.success) {
+                closeModal();
+                showSuccessToast(result.booking.booking_id);
+              } else {
+                // Show detailed error if available
+                const errorDetails = result.data?.errors?.join(', ') || result.message;
+                showError(errorDetails);
+              }
+            } catch (error) {
+              showError('An unexpected error occurred. Please try again.');
+              console.error('Booking error:', error);
+            } finally {
+              setLoading(false);
+            }
+          });
+
+          // Schedule Management
+          const scheduleGrid = document.getElementById('scheduleGrid');
+          const HOUR_HEIGHT = 96;
+          const START_HOUR = 8;
+          const MAX_VISIBLE_COLUMNS = 3; // Show "+N more" after this many
+          const MAX_MOBILE_COLUMNS = 2;  // Fewer columns on mobile
+
+          // Check if we're on mobile
+          function isMobile() {
+            return window.innerWidth < 640;
+          }
+
+          // Calculate position and height for booking
+          function getBookingPosition(startTime, endTime) {
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+            const startMinutes = (startHour - START_HOUR) * 60 + startMin;
+            const endMinutes = (endHour - START_HOUR) * 60 + endMin;
+            return { top: (startMinutes / 60) * HOUR_HEIGHT, height: ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT };
+          }
+
+          // Convert time string to minutes since midnight
+          function timeToMinutes(timeStr) {
+            const [hours, mins] = timeStr.split(':').map(Number);
+            return hours * 60 + mins;
+          }
+
+          // Check if two bookings overlap
+          function bookingsOverlap(a, b) {
+            const aStart = timeToMinutes(a.start_time);
+            const aEnd = timeToMinutes(a.end_time);
+            const bStart = timeToMinutes(b.start_time);
+            const bEnd = timeToMinutes(b.end_time);
+            return aStart < bEnd && aEnd > bStart;
+          }
+
+          // Calculate overlap layout for all bookings in a day
+          // Returns bookings with layout info (column, totalColumns, isHidden)
+          function calculateOverlapLayout(bookings, currentUserId) {
+            if (!bookings || bookings.length === 0) return { visible: [], moreIndicators: [] };
+
+            const maxCols = isMobile() ? MAX_MOBILE_COLUMNS : MAX_VISIBLE_COLUMNS;
+
+            // Add metadata to each booking
+            const enrichedBookings = bookings.map(b => ({
+              ...b,
+              startMins: timeToMinutes(b.start_time),
+              endMins: timeToMinutes(b.end_time),
+              isMyBooking: b.rider_id === currentUserId
+            }));
+
+            // Sort by start time, then by duration (longer first), then prioritize "my bookings"
+            enrichedBookings.sort((a, b) => {
+              if (a.startMins !== b.startMins) return a.startMins - b.startMins;
+              const aDuration = a.endMins - a.startMins;
+              const bDuration = b.endMins - b.startMins;
+              if (aDuration !== bDuration) return bDuration - aDuration;
+              if (a.isMyBooking !== b.isMyBooking) return a.isMyBooking ? -1 : 1;
+              return 0;
+            });
+
+            // Assign columns using a greedy algorithm
+            // Each column tracks when it becomes free (end time of last booking)
+            const columns = []; // Array of { endTime: number, bookings: [] }
+            const layoutResults = [];
+
+            enrichedBookings.forEach(booking => {
+              // Find the first column where this booking fits (doesn't overlap)
+              let assignedCol = -1;
+              for (let i = 0; i < columns.length; i++) {
+                if (booking.startMins >= columns[i].endTime) {
+                  assignedCol = i;
+                  break;
+                }
+              }
+
+              // If no existing column fits, create a new one
+              if (assignedCol === -1) {
+                assignedCol = columns.length;
+                columns.push({ endTime: 0, bookings: [] });
+              }
+
+              // Update column end time
+              columns[assignedCol].endTime = booking.endMins;
+              columns[assignedCol].bookings.push(booking);
+
+              layoutResults.push({
+                booking,
+                column: assignedCol,
+                isMyBooking: booking.isMyBooking
+              });
+            });
+
+            // Now determine how many columns each booking actually needs to consider
+            // by checking overlaps at each point in time
+            const totalColumns = columns.length;
+
+            // Group overlapping bookings to determine actual column counts at each time slice
+            layoutResults.forEach(item => {
+              // Find all bookings that overlap with this one
+              const overlapping = layoutResults.filter(other =>
+                bookingsOverlap(item.booking, other.booking)
+              );
+              item.overlappingCount = overlapping.length;
+
+              // Get the max column index among overlapping bookings
+              const maxColInGroup = Math.max(...overlapping.map(o => o.column));
+              item.columnsInGroup = maxColInGroup + 1;
+            });
+
+            // Separate visible bookings from hidden ones
+            const visible = [];
+            const hiddenByTimeSlot = {}; // Group hidden bookings by their time range
+
+            layoutResults.forEach(item => {
+              // Always show "my bookings" if possible, prioritize them
+              const effectiveMaxCols = maxCols;
+
+              if (item.column < effectiveMaxCols) {
+                // This booking is visible
+                visible.push({
+                  booking: item.booking,
+                  isMyBooking: item.isMyBooking,
+                  layout: {
+                    column: item.column,
+                    totalColumns: Math.min(item.columnsInGroup, effectiveMaxCols + 1), // +1 for the "more" indicator
+                    hasMore: item.columnsInGroup > effectiveMaxCols
+                  }
+                });
+              } else {
+                // This booking is hidden - group by time slot for "+N more" indicator
+                const key = `${item.booking.start_time}-${item.booking.end_time}`;
+                if (!hiddenByTimeSlot[key]) {
+                  hiddenByTimeSlot[key] = {
+                    startTime: item.booking.start_time,
+                    endTime: item.booking.end_time,
+                    bookings: []
+                  };
+                }
+                hiddenByTimeSlot[key].bookings.push(item.booking);
+              }
+            });
+
+            // Create "+N more" indicators
+            // Merge nearby hidden bookings into consolidated indicators
+            const moreIndicators = [];
+            const processedHidden = new Set();
+
+            layoutResults.forEach(item => {
+              if (item.column >= maxCols && !processedHidden.has(item.booking.booking_id)) {
+                // Find all hidden bookings that overlap with this one
+                const overlappingHidden = layoutResults.filter(other =>
+                  other.column >= maxCols &&
+                  bookingsOverlap(item.booking, other.booking)
+                );
+
+                // Mark all as processed
+                overlappingHidden.forEach(h => processedHidden.add(h.booking.booking_id));
+
+                // Calculate the time span that covers all these hidden bookings
+                const minStart = Math.min(...overlappingHidden.map(h => h.booking.startMins));
+                const maxEnd = Math.max(...overlappingHidden.map(h => h.booking.endMins));
+
+                // Find how many visible columns exist at this time
+                const visibleAtTime = visible.filter(v =>
+                  bookingsOverlap(v.booking, item.booking)
+                );
+                const visibleColumns = visibleAtTime.length > 0
+                  ? Math.max(...visibleAtTime.map(v => v.layout.column)) + 1
+                  : 0;
+
+                moreIndicators.push({
+                  count: overlappingHidden.length,
+                  bookings: overlappingHidden.map(h => h.booking),
+                  startMins: minStart,
+                  endMins: maxEnd,
+                  column: Math.min(visibleColumns, maxCols),
+                  totalColumns: Math.min(visibleColumns + 1, maxCols + 1)
+                });
+              }
+            });
+
+            return { visible, moreIndicators };
+          }
+
+          // Create booking HTML string with layout positioning
+          function createBookingHTML(booking, isMyBooking = false, layout = null) {
+            const startTime = booking.start_time.slice(0, 5);
+            const endTime = booking.end_time.slice(0, 5);
+            const { top, height } = getBookingPosition(startTime, endTime);
+
+            // Store booking data for detail view
+            bookingDataStore.set(booking.booking_id, booking);
+
+            // Calculate horizontal positioning based on layout
+            let leftStyle = '4px';
+            let rightStyle = '4px';
+            let widthStyle = '';
+
+            if (layout && layout.totalColumns > 1) {
+              const colWidth = 100 / layout.totalColumns;
+              const leftPercent = layout.column * colWidth;
+              leftStyle = `calc(${leftPercent}% + 2px)`;
+              rightStyle = 'auto';
+              widthStyle = `calc(${colWidth}% - 4px)`;
+            }
+
+            const isCompact = layout && layout.totalColumns >= 3;
+            const isMobileView = isMobile();
+            const isVeryCompact = (layout && layout.totalColumns >= 2 && isMobileView) || (layout && layout.totalColumns >= 3);
+
+            // Base classes - ALL cards are now clickable
+            let className = 'absolute booking-card overflow-hidden transition-all z-10 cursor-pointer ';
+
+            if (isMyBooking) {
+              className += 'bg-brand-yellow text-black rounded-xl shadow-lg shadow-brand-yellow/10 hover:bg-[#EACE40] border border-white/20';
+            } else {
+              className += 'bg-green-500/20 rounded-lg border border-green-500/30 hover:bg-green-500/30 hover:border-green-500/50';
+            }
+
+            // Padding based on compactness
+            const paddingClass = isVeryCompact ? 'p-1.5' : (isCompact ? 'p-2' : 'p-3');
+            className += ` ${paddingClass}`;
+
+            // Build inner content based on available space
+            let innerContent = '';
+
+            if (isMyBooking) {
+              if (isVeryCompact) {
+                // Very compact: just time
+                innerContent = `
+                  <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-0.5">My Ride</div>
+                  <div class="text-[10px] font-bold leading-tight">${startTime}-${endTime}</div>
+                `;
+              } else if (isCompact) {
+                // Compact: badge + time
+                innerContent = `
+                  <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-1">My Ride</div>
+                  <div class="text-xs font-bold leading-tight">${startTime} - ${endTime}</div>
+                `;
+              } else {
+                // Full: badge + time + zone
+                innerContent = `
+                  <div class="flex justify-between items-start mb-1"><span class="text-[10px] font-black tracking-wider uppercase bg-black/10 px-1.5 py-0.5 rounded">My Ride</span></div>
+                  <div class="text-sm font-bold leading-tight">${startTime} - ${endTime}</div>
+                  <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="text-[10px] font-bold">${booking.zone}</span></div>
+                `;
+              }
+            } else {
+              if (isVeryCompact) {
+                // Very compact: just name initial + time
+                const initial = booking.rider_name.charAt(0).toUpperCase();
+                innerContent = `
+                  <div class="text-[10px] font-bold text-green-200 truncate">${initial}.</div>
+                  <div class="text-[9px] text-green-300/80">${startTime}</div>
+                `;
+              } else if (isCompact) {
+                // Compact: short name + time
+                const shortName = booking.rider_name.split(' ')[0];
+                innerContent = `
+                  <div class="text-[10px] font-bold text-green-200 truncate">${shortName}</div>
+                  <div class="text-[9px] text-green-300/80">${startTime}-${endTime}</div>
+                `;
+              } else {
+                // Full: name + time + zone
+                innerContent = `
+                  <div class="text-xs font-bold text-green-200 truncate mb-0.5">${booking.rider_name}</div>
+                  <div class="text-[10px] text-green-300/80 font-medium">${startTime} - ${endTime}</div>
+                  <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[12px] text-green-400">location_on</span><span class="text-[10px] text-green-300/70">${booking.zone}</span></div>
+                `;
+              }
+            }
+
+            // Build style string
+            let styleStr = `top: ${top}px; height: ${height}px; left: ${leftStyle};`;
+            if (widthStyle) {
+              styleStr += ` width: ${widthStyle};`;
+            } else {
+              styleStr += ` right: ${rightStyle};`;
+            }
+
+            // Add data attributes and onclick for detail view
+            const dataAttrs = `data-booking-id="${booking.booking_id}" data-rider="${booking.rider_name}" data-time="${startTime}-${endTime}" data-zone="${booking.zone}"`;
+
+            return `<div class="${className}" style="${styleStr}" ${dataAttrs} onclick="showBookingDetails(this, event)">${innerContent}</div>`;
+          }
+
+          // Create "+N more" indicator HTML
+          function createMoreIndicatorHTML(indicator) {
+            const startTime = `${String(Math.floor(indicator.startMins / 60)).padStart(2, '0')}:${String(indicator.startMins % 60).padStart(2, '0')}`;
+            const endTime = `${String(Math.floor(indicator.endMins / 60)).padStart(2, '0')}:${String(indicator.endMins % 60).padStart(2, '0')}`;
+            const { top, height } = getBookingPosition(startTime, endTime);
+
+            // Calculate horizontal positioning
+            const colWidth = 100 / indicator.totalColumns;
+            const leftPercent = indicator.column * colWidth;
+            const leftStyle = `calc(${leftPercent}% + 2px)`;
+            const widthStyle = `calc(${colWidth}% - 4px)`;
+
+            // Encode bookings data for the popover
+            const bookingsData = encodeURIComponent(JSON.stringify(indicator.bookings.map(b => ({
+              id: b.booking_id,
+              name: b.rider_name,
+              time: `${b.start_time.slice(0, 5)} - ${b.end_time.slice(0, 5)}`,
+              zone: b.zone
+            }))));
+
+            return `
+              <div class="absolute bg-gray-700/80 hover:bg-gray-600/90 rounded-lg border border-gray-500/30 p-2 cursor-pointer transition-all z-20 more-indicator flex flex-col items-center justify-center text-center"
+                   style="top: ${top}px; height: ${Math.max(height, 48)}px; left: ${leftStyle}; width: ${widthStyle};"
+                   data-bookings="${bookingsData}"
+                   onclick="showMorePopover(this, event)">
+                <span class="text-white font-bold text-sm">+${indicator.count}</span>
+                <span class="text-gray-300 text-[9px]">more</span>
+              </div>
+            `;
+          }
+
+          // Show popover with hidden bookings
+          function showMorePopover(element, event) {
+            event.stopPropagation();
+
+            // Remove any existing popover
+            hideMorePopover();
+
+            const bookingsData = JSON.parse(decodeURIComponent(element.dataset.bookings));
+            const rect = element.getBoundingClientRect();
+
+            // Create popover
+            const popover = document.createElement('div');
+            popover.id = 'bookingPopover';
+            popover.className = 'fixed bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 z-50 min-w-[200px] max-w-[280px]';
+
+            // Position popover
+            const isMobileView = isMobile();
+            if (isMobileView) {
+              // Center on mobile
+              popover.style.left = '50%';
+              popover.style.transform = 'translateX(-50%)';
+              popover.style.bottom = '80px';
+            } else {
+              // Position near the indicator
+              popover.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
+              popover.style.top = `${rect.top + rect.height + 8}px`;
+            }
+
+            // Build popover content
+            let content = `
+              <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-700">
+                <span class="text-white font-bold text-sm">${bookingsData.length} Bookings</span>
+                <button onclick="hideMorePopover()" class="text-gray-400 hover:text-white">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+              <div class="space-y-2 max-h-[200px] overflow-y-auto">
+            `;
+
+            bookingsData.forEach(b => {
+              content += `
+                <div class="bg-gray-800/50 rounded-lg p-2">
+                  <div class="text-green-300 font-bold text-xs truncate">${b.name}</div>
+                  <div class="text-gray-400 text-[10px]">${b.time}</div>
+                  <div class="flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[10px] text-gray-500">location_on</span>
+                    <span class="text-gray-500 text-[9px]">${b.zone}</span>
+                  </div>
+                </div>
+              `;
+            });
+
+            content += '</div>';
+            popover.innerHTML = content;
+            document.body.appendChild(popover);
+
+            // Close on click outside
+            setTimeout(() => {
+              document.addEventListener('click', hideMorePopoverOnClickOutside);
+            }, 100);
+          }
+
+          function hideMorePopover() {
+            const popover = document.getElementById('bookingPopover');
+            if (popover) popover.remove();
+            document.removeEventListener('click', hideMorePopoverOnClickOutside);
+          }
+
+          function hideMorePopoverOnClickOutside(e) {
+            const popover = document.getElementById('bookingPopover');
+            if (popover && !popover.contains(e.target) && !e.target.closest('.more-indicator')) {
+              hideMorePopover();
+            }
+          }
+
+          // Make functions globally accessible
+          window.showMorePopover = showMorePopover;
+          window.hideMorePopover = hideMorePopover;
+
+          // Store booking data for detail view
+          const bookingDataStore = new Map();
+
+          // Show booking details modal
+          function showBookingDetails(element, event) {
+            event.stopPropagation();
+
+            // Remove any existing modal
+            hideBookingDetails();
+            hideMorePopover();
+
+            const bookingId = element.dataset.bookingId;
+            const bookingData = bookingDataStore.get(bookingId);
+
+            if (!bookingData) {
+              console.error('Booking data not found for:', bookingId);
+              return;
+            }
+
+            const isMyBooking = element.classList.contains('bg-brand-yellow');
+            const rect = element.getBoundingClientRect();
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'bookingDetailsModal';
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+
+            // Calculate duration
+            const [startH, startM] = bookingData.start_time.split(':').map(Number);
+            const [endH, endM] = bookingData.end_time.split(':').map(Number);
+            const durationMins = (endH * 60 + endM) - (startH * 60 + startM);
+            const durationHours = Math.floor(durationMins / 60);
+            const durationRemMins = durationMins % 60;
+            const durationStr = durationHours > 0
+              ? `${durationHours}h ${durationRemMins > 0 ? durationRemMins + 'm' : ''}`
+              : `${durationMins}m`;
+
+            // Format date nicely
+            const bookingDate = new Date(bookingData.booking_date || new Date());
+            const dateStr = bookingDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric'
+            });
+
+            const headerBg = isMyBooking ? 'bg-brand-yellow' : 'bg-green-500/30';
+            const headerText = isMyBooking ? 'text-black' : 'text-green-200';
+            const badgeText = isMyBooking ? 'My Ride' : 'Booked';
+            const badgeBg = isMyBooking ? 'bg-black/20' : 'bg-green-500/30';
+
+            modal.innerHTML = `
+              <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="hideBookingDetails()"></div>
+              <div class="relative bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-modalSlideUp">
+                <!-- Header -->
+                <div class="${headerBg} ${headerText} p-4">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <span class="text-[10px] font-black uppercase ${badgeBg} px-2 py-1 rounded">${badgeText}</span>
+                      <h3 class="text-xl font-bold mt-2">${bookingData.rider_name}</h3>
+                    </div>
+                    <button onclick="hideBookingDetails()" class="p-1 hover:bg-black/20 rounded-lg transition-colors">
+                      <span class="material-symbols-outlined text-[24px]">close</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Details -->
+                <div class="p-4 space-y-4">
+                  <!-- Booking ID -->
+                  <div class="flex items-center gap-3 text-gray-400">
+                    <span class="material-symbols-outlined text-[20px]">confirmation_number</span>
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Booking ID</div>
+                      <div class="text-white font-mono font-bold">${bookingData.booking_id}</div>
+                    </div>
+                  </div>
+
+                  <!-- Date -->
+                  <div class="flex items-center gap-3 text-gray-400">
+                    <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Date</div>
+                      <div class="text-white font-medium">${dateStr}</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Time -->
+                  <div class="flex items-center gap-3 text-gray-400">
+                    <span class="material-symbols-outlined text-[20px]">schedule</span>
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Time</div>
+                      <div class="text-white font-medium">${bookingData.start_time.slice(0, 5)} - ${bookingData.end_time.slice(0, 5)}</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Duration -->
+                  <div class="flex items-center gap-3 text-gray-400">
+                    <span class="material-symbols-outlined text-[20px]">timelapse</span>
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Duration</div>
+                      <div class="text-white font-medium">${durationStr}</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Zone -->
+                  <div class="flex items-center gap-3 text-gray-400">
+                    <span class="material-symbols-outlined text-[20px]">location_on</span>
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wider text-gray-500">Zone</div>
+                      <div class="text-white font-medium">${bookingData.zone}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="p-4 pt-0">
+                  <button onclick="hideBookingDetails()" class="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-colors">
+                    Close
+                  </button>
+                </div>
+              </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close on escape key
+            document.addEventListener('keydown', hideBookingDetailsOnEscape);
+          }
+
+          function hideBookingDetails() {
+            const modal = document.getElementById('bookingDetailsModal');
+            if (modal) modal.remove();
+            document.removeEventListener('keydown', hideBookingDetailsOnEscape);
+          }
+
+          function hideBookingDetailsOnEscape(e) {
+            if (e.key === 'Escape') {
+              hideBookingDetails();
+            }
+          }
+
+          // Make functions globally accessible
+          window.showBookingDetails = showBookingDetails;
+          window.hideBookingDetails = hideBookingDetails;
+
+          // Create available slot HTML string
+          function createAvailableSlotHTML(hour, dateStr, isEarlyBird = true) {
+            const top = (hour - START_HOUR) * HOUR_HEIGHT;
+            const timeStr = `${String(hour).padStart(2, '0')}:00`;
+            const statusText = isEarlyBird ? 'Available' : 'Empty Slot';
+
+            return `
+              <div class="absolute left-1 right-1 h-[92px] rounded-lg border border-dashed border-white/10 p-2 cursor-pointer hover:border-brand-yellow/50 hover:bg-brand-yellow/5 transition-all group slot-available" style="top: ${top}px;" data-date="${dateStr}" data-time="${timeStr}">
+                <div class="flex items-center gap-1.5 text-[10px] text-gray-500 group-hover:text-brand-yellow transition-colors">
+                  <span class="material-symbols-outlined text-[14px]">add_circle</span>
+                  <span class="font-medium">${statusText}</span>
+                </div>
+                <div class="text-[10px] text-gray-600 mt-0.5">${timeStr}</div>
+              </div>
+            `;
+          }
+
+          // Create restricted slot HTML string
+          function createRestrictedSlotHTML(hour, dateStr) {
+            const top = (hour - START_HOUR) * HOUR_HEIGHT;
+            const timeStr = `${String(hour).padStart(2, '0')}:00`;
+
+            return `
+              <div class="absolute left-1 right-1 h-[92px] rounded-lg border border-dashed border-red-500/20 p-2 cursor-not-allowed bg-red-500/5" style="top: ${top}px;" title="This slot has existing bookings. Daily limit reached - only empty slots available.">
+                <div class="flex items-center gap-1.5 text-[10px] text-red-400/60">
+                  <span class="material-symbols-outlined text-[14px]">block</span>
+                  <span class="font-medium">Occupied</span>
+                </div>
+                <div class="text-[10px] text-red-400/40 mt-0.5">${timeStr}</div>
+              </div>
+            `;
+          }
+
+          // Create skeleton HTML for loading state
+          function createSkeletonHTML() {
+            let skeletonItems = '';
+            for (let hour = START_HOUR; hour < 22; hour++) {
+              const top = (hour - START_HOUR) * HOUR_HEIGHT;
+              skeletonItems += `
+                <div class="absolute left-1 right-1 h-[88px] rounded-lg skeleton skeleton-block" style="top: ${top}px;"></div>
+              `;
+            }
+            return skeletonItems;
+          }
+
+          // Show skeleton loading state
+          function showLoadingSkeleton() {
+            const dayColumns = scheduleGrid.querySelectorAll('[data-day]');
+            const skeletonHTML = createSkeletonHTML();
+            dayColumns.forEach(col => {
+              col.innerHTML = skeletonHTML;
+            });
+          }
+
+          // Update capacity badge in header
+          function updateCapacityBadge(count, limit, isEarlyBird) {
+            const badge = document.getElementById('dailyCapacityBadge');
+            const countEl = document.getElementById('dailyBookingCount');
+            const limitEl = document.getElementById('dailyBookingLimit');
+            const earlyBirdEl = document.getElementById('earlyBirdBadge');
+
+            if (badge) badge.classList.remove('hidden');
+            if (badge) badge.classList.add('flex');
+            if (countEl) countEl.textContent = count;
+            if (limitEl) limitEl.textContent = limit;
+
+            if (earlyBirdEl) {
+              if (isEarlyBird && count < limit) {
+                earlyBirdEl.classList.remove('hidden');
+                earlyBirdEl.textContent = `${limit - count} spots left`;
+              } else {
+                earlyBirdEl.classList.add('hidden');
+              }
+            }
+          }
+
+          // Show schedule error
+          function showScheduleError(message, details = '') {
+            const dayColumns = scheduleGrid.querySelectorAll('[data-day]');
+            const errorHTML = `
+              <div class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                <span class="material-symbols-outlined text-4xl text-red-400 mb-2">error</span>
+                <div class="text-sm font-bold text-red-400 mb-1">Failed to load schedule</div>
+                <div class="text-xs text-gray-500">${message}</div>
+                ${details ? `<div class="text-xs text-gray-600 mt-1">${details}</div>` : ''}
+                <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium text-white transition-colors">
+                  Try Again
+                </button>
+              </div>
+            `;
+            // Show error in first column, clear others
+            dayColumns.forEach((col, i) => {
+              col.innerHTML = i === 0 ? errorHTML : '';
+            });
+          }
+
+          // Fetch and display bookings using batch endpoint (OPTIMIZED)
+          async function loadScheduleBookings() {
+            const weekDates = getWeekDates(weekOffset);
+            const startDate = formatDate(weekDates[0]);
+            const dayColumns = scheduleGrid.querySelectorAll('[data-day]');
+            const currentUser = getCurrentUser();
+            const today = formatDate(new Date());
+
+            // Show skeleton loading state immediately
+            showLoadingSkeleton();
+
+            try {
+              // Single API call for entire week (PERFORMANCE OPTIMIZATION)
+              const response = await fetch(`${API_BASE}/bookings/week?start_date=${startDate}`);
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+              }
+
+              const data = await response.json();
+
+              if (!data.success) {
+                throw new Error(data.message || 'Failed to load schedule data');
+              }
+
+              // Clear booking data store for fresh data
+              bookingDataStore.clear();
+
+              // Batch render all days (single DOM update per column)
+              data.days.forEach((dayData, index) => {
+                const column = dayColumns[index];
+                const htmlFragments = [];
+                // Add booking_date to each booking for the details modal
+                const bookings = (dayData.bookings || []).map(b => ({
+                  ...b,
+                  booking_date: dayData.date
+                }));
+                const isEarlyBird = dayData.is_early_bird;
+                const dailyLimit = data.daily_limit || 20;
+
+                // Calculate overlap layout for all bookings
+                const layoutData = calculateOverlapLayout(bookings, currentUser.rider_id);
+
+                // Build booking HTML with layout positioning
+                layoutData.visible.forEach(item => {
+                  htmlFragments.push(createBookingHTML(item.booking, item.isMyBooking, item.layout));
+                });
+
+                // Build "+N more" indicators for hidden bookings
+                layoutData.moreIndicators.forEach(indicator => {
+                  htmlFragments.push(createMoreIndicatorHTML(indicator));
+                });
+
+                // Build available/restricted slot HTML for each hour
+                for (let hour = START_HOUR; hour < 22; hour++) {
+                  const slotStart = hour * 60;
+                  const slotEnd = (hour + 1) * 60;
+
+                  const hasBookings = bookings.some(b => {
+                    const [startH, startM] = b.start_time.split(':').map(Number);
+                    const [endH, endM] = b.end_time.split(':').map(Number);
+                    const bookingStart = startH * 60 + startM;
+                    const bookingEnd = endH * 60 + endM;
+                    return bookingStart < slotEnd && bookingEnd > slotStart;
+                  });
+
+                  if (isEarlyBird) {
+                    if (!hasBookings) {
+                      htmlFragments.push(createAvailableSlotHTML(hour, dayData.date, true));
+                    }
+                  } else {
+                    if (!hasBookings) {
+                      htmlFragments.push(createAvailableSlotHTML(hour, dayData.date, false));
+                    } else {
+                      htmlFragments.push(createRestrictedSlotHTML(hour, dayData.date));
+                    }
+                  }
+                }
+
+                // Single DOM update for this column
+                column.innerHTML = htmlFragments.join('');
+
+                // Update capacity badge for today's date
+                if (dayData.date === today) {
+                  updateCapacityBadge(dayData.daily_count, dailyLimit, isEarlyBird);
+                }
+              });
+
+              // Add click handlers to available slots
+              scheduleGrid.querySelectorAll('.slot-available').forEach(slot => {
+                slot.addEventListener('click', () => {
+                  openModalWithDate(slot.dataset.date, slot.dataset.time);
+                });
+              });
+
+            } catch (error) {
+              console.error('Error loading schedule:', error);
+              showScheduleError(error.message, 'Check console for details');
+            }
+          }
+
+          // Setup time slot clicks
+          function setupTimeSlotClicks() {
+            const weekDates = getWeekDates(weekOffset);
+            const dayColumns = scheduleGrid.querySelectorAll('[data-day]');
+
+            dayColumns.forEach((column, dayIndex) => {
+              column.addEventListener('click', (e) => {
+                // Don't trigger if clicking on a booking or available slot
+                if (e.target.closest('.absolute')) return;
+
+                const rect = column.getBoundingClientRect();
+                const clickY = e.clientY - rect.top + column.scrollTop;
+                const hourOffset = clickY / HOUR_HEIGHT;
+                const hour = Math.floor(START_HOUR + hourOffset);
+                const minutes = Math.floor((hourOffset % 1) * 60 / 15) * 15; // Round to 15-min intervals
+                const timeStr = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                const dateStr = formatDate(weekDates[dayIndex]);
+
+                openModalWithDate(dateStr, timeStr);
+              });
+            });
+          }
+
+          // Initial load
+          updateHeader();
+          updateDayHeaders();
+          loadScheduleBookings();
+
+          // Set minimum date to today (prevent booking past dates)
+          const today = new Date().toISOString().split('T')[0];
+          bookingDateInput.min = today;
+          setupTimeSlotClicks();
+        })();
+    </script>
+    <!-- AI Features -->
+    <script src="../js/ai-recommendations.js"></script>
+    <script src="../js/ai-chat.js"></script>
+  </main>
+</body>
+
+</html>

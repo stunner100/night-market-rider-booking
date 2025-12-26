@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+  <title>My Bookings - Night Market</title>
+  <!-- Mobile PWA Meta Tags -->
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Night Market" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+  <!-- Mobile CSS -->
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "brand-yellow": "#FFE979",
+            "brand-black": "#000000",
+            "brand-gray": "#1A1A1A",
+            "brand-light-gray": "#333333",
+            "brand-text-muted": "#9CA3AF",
+          },
+          fontFamily: {
+            "display": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+  <style>
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+    }
+
+    .logo-icon {
+      color: #FFE979;
+    }
+  </style>
+</head>
+
+<body class="bg-brand-black text-white font-display overflow-x-hidden min-h-screen flex flex-col">
+  <!-- Auth Script -->
+  <script src="../js/auth.js"></script>
+  <!-- Navigation -->
+  <script src="../js/navigation.js"></script>
+  <div class="flex-1 flex justify-center py-8 px-4 md:px-10 lg:px-8">
+    <div class="flex flex-col max-w-[1200px] w-full gap-8">
+      <div class="flex flex-wrap items-end justify-between gap-4 border-b border-brand-light-gray pb-6">
+        <div class="flex flex-col gap-2">
+          <h1 class="text-4xl font-bold text-white tracking-tight">My Bookings</h1>
+          <p class="text-brand-text-muted text-base">Manage your upcoming ride schedules and shifts</p>
+        </div>
+        <a href="../booking_schedule/code.html"
+          class="flex min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-full h-11 px-6 bg-brand-yellow hover:bg-yellow-400 text-brand-black shadow-lg shadow-brand-yellow/10 transition-all text-sm font-bold no-underline">
+          <span class="material-symbols-outlined text-[20px]">add</span>
+          <span class="truncate">Book New Time</span>
+        </a>
+      </div>
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div
+          class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray hover:border-brand-yellow/50 transition-colors group">
+          <div class="flex items-center gap-3 mb-1">
+            <div
+              class="p-2 rounded-lg bg-brand-light-gray text-brand-yellow group-hover:bg-brand-yellow group-hover:text-brand-black transition-colors">
+              <span class="material-symbols-outlined text-xl">calendar_month</span>
+            </div>
+            <p class="text-brand-text-muted font-medium">Upcoming Shifts</p>
+          </div>
+          <p id="upcomingCount" class="text-white text-3xl font-bold pl-1">-</p>
+        </div>
+        <div
+          class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray hover:border-brand-yellow/50 transition-colors group">
+          <div class="flex items-center gap-3 mb-1">
+            <div
+              class="p-2 rounded-lg bg-brand-light-gray text-brand-yellow group-hover:bg-brand-yellow group-hover:text-brand-black transition-colors">
+              <span class="material-symbols-outlined text-xl">schedule</span>
+            </div>
+            <p class="text-brand-text-muted font-medium">Hours This Week</p>
+          </div>
+          <p id="hoursThisWeek" class="text-white text-3xl font-bold pl-1">- <span
+              class="text-sm font-medium text-brand-text-muted">hrs</span></p>
+        </div>
+        <div
+          class="flex flex-col gap-2 rounded-xl p-6 bg-brand-gray border border-brand-light-gray hover:border-brand-yellow/50 transition-colors group">
+          <div class="flex items-center gap-3 mb-1">
+            <div
+              class="p-2 rounded-lg bg-brand-light-gray text-brand-yellow group-hover:bg-brand-yellow group-hover:text-brand-black transition-colors">
+              <span class="material-symbols-outlined text-xl">timer</span>
+            </div>
+            <p class="text-brand-text-muted font-medium">Next Ride In</p>
+          </div>
+          <p id="nextRideIn" class="text-white text-3xl font-bold pl-1">-</p>
+        </div>
+      </div>
+      <!-- Tabs and Search -->
+      <div class="flex flex-col gap-6">
+        <div id="tabsContainer" class="flex gap-8 border-b border-brand-light-gray">
+          <button data-tab="upcoming"
+            class="tab-btn relative flex flex-col items-center justify-center pb-3 pt-2 group">
+            <p class="text-white text-sm font-bold tracking-wide">Upcoming <span id="upcomingBadge"
+                class="ml-1 text-xs bg-brand-yellow/20 text-brand-yellow px-1.5 py-0.5 rounded-full"></span></p>
+            <div class="absolute bottom-0 w-full h-[2px] bg-brand-yellow"></div>
+          </button>
+          <button data-tab="completed"
+            class="tab-btn relative flex flex-col items-center justify-center pb-3 pt-2 group">
+            <p class="text-brand-text-muted text-sm font-medium tracking-wide group-hover:text-white transition-colors">
+              Completed <span id="completedBadge"
+                class="ml-1 text-xs bg-white/10 text-white/60 px-1.5 py-0.5 rounded-full"></span></p>
+            <div
+              class="absolute bottom-0 w-full h-[2px] bg-transparent group-hover:bg-brand-light-gray transition-colors">
+            </div>
+          </button>
+          <button data-tab="cancelled"
+            class="tab-btn relative flex flex-col items-center justify-center pb-3 pt-2 group">
+            <p class="text-brand-text-muted text-sm font-medium tracking-wide group-hover:text-white transition-colors">
+              Cancelled <span id="cancelledBadge"
+                class="ml-1 text-xs bg-white/10 text-white/60 px-1.5 py-0.5 rounded-full"></span></p>
+            <div
+              class="absolute bottom-0 w-full h-[2px] bg-transparent group-hover:bg-brand-light-gray transition-colors">
+            </div>
+          </button>
+        </div>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-brand-text-muted">search</span>
+          </div>
+          <input id="searchInput"
+            class="block w-full rounded-xl border-brand-light-gray bg-brand-gray py-3 pl-12 pr-4 text-white placeholder-brand-text-muted focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow sm:text-sm"
+            placeholder="Search by date, location or ID" type="text" />
+        </div>
+      </div>
+      <!-- Bookings List -->
+      <div id="bookingsContainer" class="flex flex-col gap-4 pb-10">
+        <!-- Loading State -->
+        <div id="loadingState" class="flex items-center justify-center py-12">
+          <div class="flex flex-col items-center gap-4">
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-brand-yellow border-t-transparent"></div>
+            <p class="text-brand-text-muted">Loading your bookings...</p>
+          </div>
+        </div>
+        <!-- Empty State (hidden by default) -->
+        <div id="emptyState" class="hidden flex items-center justify-center py-12">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <span class="material-symbols-outlined text-6xl text-brand-light-gray">event_busy</span>
+            <p class="text-brand-text-muted text-lg">No bookings found</p>
+            <a href="../booking_schedule/code.html"
+              class="mt-2 px-6 py-2 bg-brand-yellow text-black font-bold rounded-lg hover:bg-yellow-400 transition-colors">Book
+              a Ride</a>
+          </div>
+        </div>
+        <!-- Booking Cards will be inserted here dynamically -->
+      </div>
+      <div id="loadMoreContainer" class="hidden flex items-center justify-center py-4">
+        <button id="loadMoreBtn"
+          class="text-sm font-medium text-brand-text-muted hover:text-brand-yellow transition-colors">Load more
+          bookings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Confirmation Modal -->
+  <div id="cancelModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-brand-gray w-full max-w-sm rounded-2xl shadow-2xl border border-brand-light-gray overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined text-red-400 text-4xl">warning</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Cancel Booking?</h3>
+        <p id="cancelBookingIdText" class="text-sm text-brand-text-muted mb-1">Booking #BK-0000</p>
+        <p class="text-sm text-brand-text-muted">This action cannot be undone. Your time slot will become available for
+          others.</p>
+      </div>
+      <div class="p-4 bg-white/5 flex gap-3 border-t border-brand-light-gray">
+        <button id="cancelModalNoBtn" type="button"
+          class="flex-1 px-4 py-3 rounded-lg border border-brand-light-gray text-brand-text-muted font-bold text-sm hover:bg-white/10 transition-colors">Keep
+          Booking</button>
+        <button id="cancelModalYesBtn" type="button"
+          class="flex-1 px-4 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-all flex items-center justify-center gap-2">
+          <span id="cancelBtnText">Yes, Cancel</span>
+          <span id="cancelBtnLoader" class="hidden"><svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reschedule Modal -->
+  <div id="rescheduleModal"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-[#1A1A1A] w-full max-w-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+      <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+        <div>
+          <h3 class="text-xl font-bold text-white">Reschedule Booking</h3>
+          <p id="rescheduleBookingId" class="text-sm text-gray-500 mt-1">Booking #BK-0000</p>
+        </div>
+        <button id="closeRescheduleModalBtn" class="text-gray-400 hover:text-white transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="rescheduleForm" class="p-6 space-y-6">
+        <div class="flex items-center gap-3 text-sm text-gray-400 bg-white/5 p-3 rounded-xl border border-white/10">
+          <span class="material-symbols-outlined text-brand-yellow">info</span>
+          <span>Current: <span id="currentDateTime" class="text-white font-medium">Mon, Dec 22 at 10:00</span></span>
+        </div>
+
+        <!-- Date Selection -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">New Date</label>
+          <div class="relative">
+            <input id="rescheduleDate" name="booking_date" type="date"
+              class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all cursor-pointer"
+              required />
+            <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+              onclick="document.getElementById('rescheduleDate').showPicker()">
+              <span class="material-symbols-outlined text-lg">calendar_month</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start Time & End Time -->
+        <div class="grid grid-cols-2 gap-5">
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Start Time</label>
+            <div class="relative">
+              <input id="rescheduleTime" name="start_time"
+                class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all"
+                type="time" required />
+              <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+                onclick="document.getElementById('rescheduleTime').showPicker()">
+                <span class="material-symbols-outlined text-lg">schedule</span>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">End Time</label>
+            <div class="relative">
+              <input id="rescheduleEndTime" name="end_time"
+                class="w-full bg-black border border-white/10 rounded-xl px-4 py-3 pr-11 text-sm focus:ring-2 focus:ring-brand-yellow focus:border-brand-yellow outline-none text-white font-bold transition-all"
+                type="time" required />
+              <div class="absolute inset-y-0 right-3 flex items-center text-brand-yellow cursor-pointer"
+                onclick="document.getElementById('rescheduleEndTime').showPicker()">
+                <span class="material-symbols-outlined text-lg">schedule</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone Display -->
+        <div class="flex items-center gap-3 text-sm p-3 rounded-xl bg-brand-yellow/5 border border-brand-yellow/20">
+          <span class="material-symbols-outlined text-brand-yellow">location_on</span>
+          <span class="text-gray-400">Zone: <span id="rescheduleZone" class="text-white font-medium">Main
+              Campus</span></span>
+        </div>
+
+        <!-- Error Message -->
+        <div id="rescheduleError"
+          class="hidden bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">error</span>
+            <span id="rescheduleErrorText">An error occurred</span>
+          </div>
+        </div>
+      </form>
+      <div class="p-4 bg-white/5 flex gap-3 border-t border-white/10">
+        <button id="cancelRescheduleBtn" type="button"
+          class="flex-1 px-4 py-3.5 rounded-xl border border-white/10 text-gray-300 font-bold text-sm hover:bg-white/10 transition-colors uppercase tracking-wide">Cancel</button>
+        <button id="confirmRescheduleBtn" type="submit" form="rescheduleForm"
+          class="flex-1 px-4 py-3.5 rounded-xl bg-brand-yellow text-black font-black text-sm hover:bg-yellow-400 shadow-lg shadow-yellow-400/20 transition-all transform hover:-translate-y-0.5 uppercase tracking-wide flex items-center justify-center gap-2">
+          <span id="rescheduleBtnText">Confirm</span>
+          <span id="rescheduleBtnLoader" class="hidden"><svg class="animate-spin h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      // Check authentication
+      if (!AuthAPI.requireAuth()) return;
+
+      const user = AuthAPI.getCurrentUser();
+      let allBookings = [];
+      let currentTab = 'upcoming';
+      let searchQuery = '';
+
+      // DOM Elements
+      const bookingsContainer = document.getElementById('bookingsContainer');
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const searchInput = document.getElementById('searchInput');
+      const upcomingCount = document.getElementById('upcomingCount');
+      const hoursThisWeek = document.getElementById('hoursThisWeek');
+      const nextRideIn = document.getElementById('nextRideIn');
+      const upcomingBadge = document.getElementById('upcomingBadge');
+      const completedBadge = document.getElementById('completedBadge');
+      const cancelledBadge = document.getElementById('cancelledBadge');
+
+      // Fetch bookings from API
+      async function fetchBookings() {
+        try {
+          const response = await AuthAPI.authFetch(`/bookings?rider_id=${user.rider_id}`);
+          if (response.success) {
+            allBookings = response.bookings || [];
+            updateStats();
+            updateBadges();
+            renderBookings();
+          } else {
+            showError('Failed to load bookings');
+          }
+        } catch (error) {
+          console.error('Error fetching bookings:', error);
+          showError('Failed to load bookings');
+        }
+      }
+
+      // Calculate and update stats
+      function updateStats() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Upcoming count
+        const upcoming = allBookings.filter(b => {
+          const bookingDate = new Date(b.booking_date);
+          return bookingDate >= today && (b.status === 'confirmed' || b.status === 'pending');
+        });
+        upcomingCount.textContent = upcoming.length;
+
+        // Hours this week
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+        const weekBookings = allBookings.filter(b => {
+          const bookingDate = new Date(b.booking_date);
+          return bookingDate >= startOfWeek && bookingDate < endOfWeek && b.status !== 'cancelled';
+        });
+        const totalMinutes = weekBookings.reduce((sum, b) => sum + (b.duration_minutes || 0), 0);
+        const hours = Math.round(totalMinutes / 60 * 10) / 10;
+        hoursThisWeek.innerHTML = `${hours} <span class="text-sm font-medium text-brand-text-muted">hrs</span>`;
+
+        // Next ride in
+        const now = new Date();
+        const nextBooking = upcoming
+          .filter(b => {
+            // Extract just the date portion from ISO string
+            const dateOnly = b.booking_date.split('T')[0];
+            const bookingDateTime = new Date(`${dateOnly}T${b.start_time}`);
+            return bookingDateTime > now;
+          })
+          .sort((a, b) => {
+            const dateA = a.booking_date.split('T')[0];
+            const dateB = b.booking_date.split('T')[0];
+            return new Date(`${dateA}T${a.start_time}`) - new Date(`${dateB}T${b.start_time}`);
+          })[0];
+
+        if (nextBooking) {
+          const dateOnly = nextBooking.booking_date.split('T')[0];
+          const nextTime = new Date(`${dateOnly}T${nextBooking.start_time}`);
+          const diff = nextTime - now;
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          if (hours > 24) {
+            const days = Math.floor(hours / 24);
+            nextRideIn.textContent = `${days}d ${hours % 24}h`;
+          } else if (hours > 0) {
+            nextRideIn.textContent = `${hours}h ${mins}m`;
+          } else {
+            nextRideIn.textContent = `${mins}m`;
+          }
+        } else {
+          nextRideIn.textContent = '-';
+        }
+      }
+
+      // Update badge counts
+      function updateBadges() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = allBookings.filter(b => {
+          const bookingDate = new Date(b.booking_date);
+          return bookingDate >= today && (b.status === 'confirmed' || b.status === 'pending');
+        });
+        const completed = allBookings.filter(b => b.status === 'completed');
+        const cancelled = allBookings.filter(b => b.status === 'cancelled');
+
+        upcomingBadge.textContent = upcoming.length;
+        completedBadge.textContent = completed.length;
+        cancelledBadge.textContent = cancelled.length;
+      }
+
+      // Filter bookings based on current tab and search
+      function getFilteredBookings() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let filtered = allBookings;
+
+        // Tab filter
+        if (currentTab === 'upcoming') {
+          filtered = filtered.filter(b => {
+            const bookingDate = new Date(b.booking_date);
+            return bookingDate >= today && (b.status === 'confirmed' || b.status === 'pending');
+          });
+        } else if (currentTab === 'completed') {
+          filtered = filtered.filter(b => b.status === 'completed');
+        } else if (currentTab === 'cancelled') {
+          filtered = filtered.filter(b => b.status === 'cancelled');
+        }
+
+        // Search filter
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          filtered = filtered.filter(b =>
+            b.booking_id.toLowerCase().includes(query) ||
+            b.zone.toLowerCase().includes(query) ||
+            b.booking_date.includes(query)
+          );
+        }
+
+        // Sort by date
+        return filtered.sort((a, b) => new Date(a.booking_date) - new Date(b.booking_date));
+      }
+
+      // Render booking cards
+      function renderBookings() {
+        loadingState.classList.add('hidden');
+
+        // Remove existing booking cards (keep loading and empty states)
+        const existingCards = bookingsContainer.querySelectorAll('.booking-card');
+        existingCards.forEach(card => card.remove());
+
+        const filtered = getFilteredBookings();
+
+        if (filtered.length === 0) {
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+
+        filtered.forEach(booking => {
+          const card = createBookingCard(booking);
+          bookingsContainer.appendChild(card);
+        });
+      }
+
+      // Create a booking card element
+      function createBookingCard(booking) {
+        const date = new Date(booking.booking_date);
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const day = date.getDate().toString().padStart(2, '0');
+        const dayName = date.toLocaleString('en-US', { weekday: 'long' });
+
+        const timeRange = `${booking.start_time.slice(0, 5)} - ${booking.end_time.slice(0, 5)}`;
+
+        const statusClasses = {
+          confirmed: 'bg-brand-yellow/10 border-brand-yellow/20 text-brand-yellow',
+          pending: 'bg-orange-900/20 border-orange-500/20 text-orange-400',
+          completed: 'bg-green-900/20 border-green-500/20 text-green-400',
+          cancelled: 'bg-red-900/20 border-red-500/20 text-red-400'
+        };
+        const statusText = {
+          confirmed: 'Confirmed',
+          pending: 'Pending Approval',
+          completed: 'Completed',
+          cancelled: 'Cancelled'
+        };
+
+        const card = document.createElement('div');
+        card.className = 'booking-card group flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 rounded-xl border border-brand-light-gray bg-brand-gray p-5 transition-all hover:border-brand-yellow/30';
+
+        const showActions = booking.status !== 'cancelled' && booking.status !== 'completed';
+
+        card.innerHTML = `
+      <div class="flex flex-1 items-start gap-5">
+        <div class="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-brand-light-gray text-center border border-transparent group-hover:border-brand-yellow group-hover:bg-brand-yellow/10 transition-all">
+          <span class="text-[10px] font-bold uppercase text-brand-text-muted group-hover:text-brand-yellow">${month}</span>
+          <span class="text-2xl font-bold text-white group-hover:text-brand-yellow">${day}</span>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center flex-wrap gap-3">
+            <h3 class="text-lg font-bold text-white">${dayName} Ride</h3>
+            <span class="inline-flex items-center rounded-full ${statusClasses[booking.status] || statusClasses.pending} border px-2.5 py-0.5 text-xs font-bold">
+              ${statusText[booking.status] || 'Unknown'}
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-text-muted">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-brand-yellow">schedule</span>
+              <span>${timeRange}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-brand-yellow">location_on</span>
+              <span>${booking.zone}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-brand-yellow">confirmation_number</span>
+              <span>${booking.booking_id}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex w-full lg:w-auto flex-col sm:flex-row items-start sm:items-center justify-between gap-4 lg:justify-end border-t border-brand-light-gray pt-4 lg:border-t-0 lg:pt-0 pl-0 lg:pl-4">
+        ${showActions ? `
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button class="reschedule-btn flex-1 sm:flex-none flex h-10 items-center justify-center gap-2 px-4 rounded-lg bg-brand-light-gray hover:bg-white hover:text-black text-white text-sm font-bold transition-colors" data-booking-id="${booking.booking_id}" data-booking-date="${booking.booking_date}" data-start-time="${booking.start_time.slice(0, 5)}" data-duration="${booking.duration_minutes}" data-zone="${booking.zone}">
+            <span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+            <span>Reschedule</span>
+          </button>
+          <button class="cancel-btn flex-1 sm:flex-none flex h-10 items-center justify-center gap-2 px-4 rounded-lg border border-red-900/50 bg-red-900/10 hover:bg-red-900/30 text-red-400 text-sm font-bold transition-colors" data-booking-id="${booking.booking_id}">
+            <span class="material-symbols-outlined text-[18px]">cancel</span>
+            <span>Cancel</span>
+          </button>
+        </div>
+        ` : ''}
+      </div>
+    `;
+
+        // Add cancel button handler
+        const cancelBtn = card.querySelector('.cancel-btn');
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', () => handleCancel(booking.booking_id));
+        }
+
+        // Add reschedule button handler
+        const rescheduleBtn = card.querySelector('.reschedule-btn');
+        if (rescheduleBtn) {
+          rescheduleBtn.addEventListener('click', () => openRescheduleModal(rescheduleBtn.dataset));
+        }
+
+        return card;
+      }
+
+      // Cancel Modal Elements
+      const cancelModal = document.getElementById('cancelModal');
+      const cancelBookingIdText = document.getElementById('cancelBookingIdText');
+      const cancelModalNoBtn = document.getElementById('cancelModalNoBtn');
+      const cancelModalYesBtn = document.getElementById('cancelModalYesBtn');
+      let pendingCancelBookingId = null;
+
+      function openCancelModal(bookingId) {
+        pendingCancelBookingId = bookingId;
+        cancelBookingIdText.textContent = `Booking #${bookingId}`;
+        cancelModal.classList.remove('hidden');
+        cancelModal.classList.add('flex');
+      }
+
+      function closeCancelModal() {
+        cancelModal.classList.add('hidden');
+        cancelModal.classList.remove('flex');
+        pendingCancelBookingId = null;
+      }
+
+      function setCancelLoading(loading) {
+        const btnText = document.getElementById('cancelBtnText');
+        const btnLoader = document.getElementById('cancelBtnLoader');
+        cancelModalYesBtn.disabled = loading;
+        btnText.classList.toggle('hidden', loading);
+        btnLoader.classList.toggle('hidden', !loading);
+      }
+
+      // Handle cancel button click - opens modal
+      function handleCancel(bookingId) {
+        openCancelModal(bookingId);
+      }
+
+      // Modal button handlers
+      cancelModalNoBtn?.addEventListener('click', closeCancelModal);
+      cancelModal?.addEventListener('click', (e) => { if (e.target === cancelModal) closeCancelModal(); });
+
+      // Confirm cancellation
+      cancelModalYesBtn?.addEventListener('click', async () => {
+        if (!pendingCancelBookingId) return;
+
+        setCancelLoading(true);
+
+        try {
+          const response = await AuthAPI.authFetch(`/bookings/${pendingCancelBookingId}/cancel`, {
+            method: 'PATCH'
+          });
+
+          if (response.success) {
+            const booking = allBookings.find(b => b.booking_id === pendingCancelBookingId);
+            if (booking) {
+              booking.status = 'cancelled';
+            }
+            closeCancelModal();
+            updateStats();
+            updateBadges();
+            renderBookings();
+            showToast('Booking cancelled successfully', 'success');
+          } else {
+            showToast(response.message || 'Failed to cancel booking', 'error');
+          }
+        } catch (error) {
+          console.error('Error cancelling booking:', error);
+          showToast('Failed to cancel booking', 'error');
+        } finally {
+          setCancelLoading(false);
+        }
+      });
+
+      // Reschedule Modal Elements
+      const rescheduleModal = document.getElementById('rescheduleModal');
+      const rescheduleForm = document.getElementById('rescheduleForm');
+      const rescheduleBookingIdEl = document.getElementById('rescheduleBookingId');
+      const currentDateTimeEl = document.getElementById('currentDateTime');
+      const rescheduleDateInput = document.getElementById('rescheduleDate');
+      const rescheduleTimeInput = document.getElementById('rescheduleTime');
+      const rescheduleEndTimeInput = document.getElementById('rescheduleEndTime');
+      const rescheduleZoneEl = document.getElementById('rescheduleZone');
+      const rescheduleError = document.getElementById('rescheduleError');
+      const rescheduleErrorText = document.getElementById('rescheduleErrorText');
+      let currentRescheduleBookingId = null;
+
+      // Open reschedule modal
+      function openRescheduleModal(data) {
+        currentRescheduleBookingId = data.bookingId;
+        rescheduleBookingIdEl.textContent = `Booking #${data.bookingId}`;
+
+        // Format current date/time for display
+        const date = new Date(data.bookingDate);
+        const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        currentDateTimeEl.textContent = `${formattedDate} at ${data.startTime}`;
+
+        // Pre-fill form with current values
+        rescheduleDateInput.value = data.bookingDate;
+        rescheduleTimeInput.value = data.startTime;
+        // Calculate end time from start time + duration
+        const [startH, startM] = data.startTime.split(':').map(Number);
+        const durationMins = parseInt(data.duration);
+        const totalMins = startH * 60 + startM + durationMins;
+        const endH = Math.floor(totalMins / 60) % 24;
+        const endM = totalMins % 60;
+        rescheduleEndTimeInput.value = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        rescheduleZoneEl.textContent = data.zone;
+
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0];
+        rescheduleDateInput.min = today;
+
+        hideRescheduleError();
+        rescheduleModal.classList.remove('hidden');
+        rescheduleModal.classList.add('flex');
+      }
+
+      // Close reschedule modal
+      function closeRescheduleModal() {
+        rescheduleModal.classList.add('hidden');
+        rescheduleModal.classList.remove('flex');
+        currentRescheduleBookingId = null;
+        hideRescheduleError();
+      }
+
+      function showRescheduleError(message) {
+        rescheduleErrorText.textContent = message;
+        rescheduleError.classList.remove('hidden');
+      }
+
+      function hideRescheduleError() {
+        rescheduleError.classList.add('hidden');
+      }
+
+      function setRescheduleLoading(loading) {
+        const btnText = document.getElementById('rescheduleBtnText');
+        const btnLoader = document.getElementById('rescheduleBtnLoader');
+        const btn = document.getElementById('confirmRescheduleBtn');
+        btn.disabled = loading;
+        btnText.classList.toggle('hidden', loading);
+        btnLoader.classList.toggle('hidden', !loading);
+      }
+
+      // Modal close handlers
+      document.getElementById('closeRescheduleModalBtn')?.addEventListener('click', closeRescheduleModal);
+      document.getElementById('cancelRescheduleBtn')?.addEventListener('click', closeRescheduleModal);
+      rescheduleModal?.addEventListener('click', (e) => { if (e.target === rescheduleModal) closeRescheduleModal(); });
+
+      // Handle reschedule form submission
+      rescheduleForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideRescheduleError();
+        setRescheduleLoading(true);
+
+        // Calculate duration from start and end times
+        const startTime = rescheduleTimeInput.value;
+        const endTime = rescheduleEndTimeInput.value;
+        const [sH, sM] = startTime.split(':').map(Number);
+        const [eH, eM] = endTime.split(':').map(Number);
+        const durationMinutes = (eH * 60 + eM) - (sH * 60 + sM);
+
+        if (durationMinutes <= 0) {
+          showRescheduleError('End time must be after start time');
+          setRescheduleLoading(false);
+          return;
+        }
+
+        const rescheduleData = {
+          booking_date: rescheduleDateInput.value,
+          start_time: startTime,
+          duration_minutes: durationMinutes
+        };
+
+        try {
+          const response = await AuthAPI.authFetch(`/bookings/${currentRescheduleBookingId}/reschedule`, {
+            method: 'PATCH',
+            body: JSON.stringify(rescheduleData)
+          });
+
+          if (response.success) {
+            closeRescheduleModal();
+            await fetchBookings(); // Refresh all bookings
+            showToast('Booking rescheduled successfully', 'success');
+          } else {
+            showRescheduleError(response.message || 'Failed to reschedule booking');
+          }
+        } catch (error) {
+          console.error('Error rescheduling booking:', error);
+          showRescheduleError('Failed to reschedule booking');
+        } finally {
+          setRescheduleLoading(false);
+        }
+      });
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentTab = btn.dataset.tab;
+
+          // Update tab styles
+          document.querySelectorAll('.tab-btn').forEach(tab => {
+            const text = tab.querySelector('p');
+            const indicator = tab.querySelector('div:last-child');
+            if (tab.dataset.tab === currentTab) {
+              text.className = 'text-white text-sm font-bold tracking-wide';
+              indicator.className = 'absolute bottom-0 w-full h-[2px] bg-brand-yellow';
+            } else {
+              text.className = 'text-brand-text-muted text-sm font-medium tracking-wide group-hover:text-white transition-colors';
+              indicator.className = 'absolute bottom-0 w-full h-[2px] bg-transparent group-hover:bg-brand-light-gray transition-colors';
+            }
+          });
+
+          renderBookings();
+        });
+      });
+
+      // Search functionality
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderBookings();
+      });
+
+      // Toast notification
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-brand-gray'
+          }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+
+      // Error display
+      function showError(message) {
+        loadingState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        emptyState.querySelector('p').textContent = message;
+      }
+
+      // Initial load
+      await fetchBookings();
+    });
+  </script>
+  <!-- AI Chat Widget -->
+  <script src="../js/ai-chat.js"></script>
+
+</body>
+
+</html>

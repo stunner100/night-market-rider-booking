@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Notification Settings - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FDE047",
+                        "primary-hover": "#EAB308",
+                        "background-dark": "#000000",
+                        "surface-dark": "#121212",
+                        "dark-text-secondary": "#9ca3af",
+                    },
+                    fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-dark font-display text-gray-100 antialiased selection:bg-primary selection:text-black">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <div class="flex flex-col md:flex-row min-h-[calc(100vh-74px)] max-w-[1440px] mx-auto">
+        <aside class="w-full md:w-64 lg:w-72 bg-background-dark p-6 md:border-r border-gray-800/50">
+            <div class="flex flex-col gap-8 sticky top-24">
+                <div class="flex gap-4 items-center px-2">
+                    <div id="userAvatar"
+                        class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 shadow-lg ring-2 ring-surface-dark"
+                        style="background-image: url('https://via.placeholder.com/56');"></div>
+                    <div class="flex flex-col">
+                        <h1 id="userName" class="text-lg font-bold leading-tight text-white">Welcome Back</h1>
+                        <p class="text-gray-500 text-sm font-medium">Manage your account</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/profile_settings/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">person</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Profile</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-black shadow-sm" href="#">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <p class="text-sm font-bold leading-normal">Notification Settings</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/support/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">help</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Support</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 px-4 md:px-12 py-8 md:py-12 max-w-5xl">
+            <div class="flex flex-col gap-10">
+                <div class="flex flex-col gap-3 pb-4 border-b border-gray-800">
+                    <h1 class="text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white">Notification
+                        Settings</h1>
+                    <p class="text-gray-400 text-base md:text-lg font-normal leading-relaxed max-w-2xl">Manage how and
+                        when you receive updates about your ride bookings and exclusive offers.</p>
+                </div>
+
+                <!-- Global Preferences -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5">
+                        <h2 class="text-lg font-bold leading-tight text-white">Global Preferences</h2>
+                    </div>
+                    <div class="p-2">
+                        <div
+                            class="flex items-center gap-5 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-all">
+                            <div
+                                class="flex items-center justify-center rounded-lg bg-primary text-black shrink-0 size-12">
+                                <span class="material-symbols-outlined">notifications_active</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-base font-bold text-white mb-0.5">Enable All Notifications</p>
+                                <p class="text-sm text-gray-400">Turn this off to pause all non-essential alerts.</p>
+                            </div>
+                            <div class="shrink-0">
+                                <label
+                                    class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full bg-gray-700 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-all duration-300">
+                                    <div class="h-[27px] w-[27px] rounded-full bg-black shadow-sm"></div>
+                                    <input id="enableAll" checked type="checkbox" class="invisible absolute" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication Channels -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Communication Channels</h2>
+                    </div>
+                    <div class="flex flex-col divide-y divide-gray-800">
+                        <div class="flex items-center justify-between p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-gray-400 mt-0.5">mail</span>
+                                <div>
+                                    <p class="text-base font-medium text-white">Email Notifications</p>
+                                    <p class="text-sm text-gray-400">Receive booking receipts and summaries.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input id="emailEnabled" checked type="checkbox" class="sr-only peer" />
+                                <div
+                                    class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-gray-400 mt-0.5">sms</span>
+                                <div>
+                                    <p class="text-base font-medium text-white">SMS Alerts</p>
+                                    <p class="text-sm text-gray-400">Urgent updates regarding your ride status.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input id="smsEnabled" checked type="checkbox" class="sr-only peer" />
+                                <div
+                                    class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-gray-400 mt-0.5">smartphone</span>
+                                <div>
+                                    <p class="text-base font-medium text-white">In-App Notifications</p>
+                                    <p class="text-sm text-gray-400">Real-time alerts while using the app.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input id="inAppEnabled" type="checkbox" class="sr-only peer" />
+                                <div
+                                    class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reminder Timings -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Reminder Timings</h2>
+                    </div>
+                    <div class="flex flex-col divide-y divide-gray-800">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-primary/10 rounded-lg p-2 text-primary">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-white">Upcoming Ride Reminder</p>
+                                    <p class="text-sm text-gray-400">When should we remind you before a booking?</p>
+                                </div>
+                            </div>
+                            <div class="relative min-w-[200px]">
+                                <select id="reminderTiming"
+                                    class="w-full appearance-none bg-gray-900 border border-gray-700 text-white py-3 px-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium">
+                                    <option value="24_hours">24 hours before</option>
+                                    <option value="1_hour" selected>1 hour before</option>
+                                    <option value="15_minutes">15 minutes before</option>
+                                    <option value="never">Don't remind me</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-green-900/20 rounded-lg p-2 text-green-400">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-white">Booking Confirmations</p>
+                                    <p class="text-sm text-gray-400">Get notified immediately when your slot is secured.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="relative min-w-[200px]">
+                                <select id="confirmationTiming"
+                                    class="w-full appearance-none bg-gray-900 border border-gray-700 text-white py-3 px-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium">
+                                    <option value="immediately" selected>Immediately</option>
+                                    <option value="daily_digest">Daily Digest</option>
+                                    <option value="never">Never</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4 hover:bg-white/5 transition-colors">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-red-900/20 rounded-lg p-2 text-red-400">
+                                    <span class="material-symbols-outlined">cancel</span>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-white">Cancellation Alerts</p>
+                                    <p class="text-sm text-gray-400">Notify me if a booked ride is cancelled.</p>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="cancellationAlerts" checked type="checkbox" class="sr-only peer" />
+                                    <div
+                                        class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end gap-4 py-6 mt-4 border-t border-gray-800">
+                    <button id="cancelBtn"
+                        class="px-6 py-3 rounded-lg text-sm font-bold text-gray-300 hover:bg-gray-800 transition-colors">Cancel</button>
+                    <button id="saveBtn"
+                        class="px-6 py-3 rounded-lg bg-primary hover:bg-primary-hover text-black text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">Save
+                        Changes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!AuthAPI.requireAuth()) return;
+
+            const user = AuthAPI.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name || 'Welcome Back';
+                if (user.avatar_url) document.getElementById('userAvatar').style.backgroundImage = `url('${user.avatar_url}')`;
+            }
+
+            let originalSettings = {};
+
+            // Form elements
+            const enableAll = document.getElementById('enableAll');
+            const emailEnabled = document.getElementById('emailEnabled');
+            const smsEnabled = document.getElementById('smsEnabled');
+            const inAppEnabled = document.getElementById('inAppEnabled');
+            const reminderTiming = document.getElementById('reminderTiming');
+            const confirmationTiming = document.getElementById('confirmationTiming');
+            const cancellationAlerts = document.getElementById('cancellationAlerts');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            // Fetch current settings
+            async function fetchSettings() {
+                try {
+                    const response = await AuthAPI.authFetch('/notification-settings');
+                    if (response.success && response.settings) {
+                        const s = response.settings;
+                        enableAll.checked = s.enable_all !== false;
+                        emailEnabled.checked = s.email_enabled !== false;
+                        smsEnabled.checked = s.sms_enabled !== false;
+                        inAppEnabled.checked = s.in_app_enabled !== false;
+                        reminderTiming.value = s.reminder_timing || '1_hour';
+                        confirmationTiming.value = s.confirmation_timing || 'immediately';
+                        cancellationAlerts.checked = s.cancellation_alerts !== false;
+                        originalSettings = { ...s };
+                    }
+                } catch (error) { console.error('Error fetching settings:', error); }
+            }
+
+            // Save settings
+            saveBtn.addEventListener('click', async () => {
+                try {
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
+
+                    const response = await AuthAPI.authFetch('/notification-settings', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            enable_all: enableAll.checked,
+                            email_enabled: emailEnabled.checked,
+                            sms_enabled: smsEnabled.checked,
+                            in_app_enabled: inAppEnabled.checked,
+                            reminder_timing: reminderTiming.value,
+                            confirmation_timing: confirmationTiming.value,
+                            cancellation_alerts: cancellationAlerts.checked
+                        })
+                    });
+
+                    if (response.success) {
+                        showToast('Settings saved successfully!', 'success');
+                        originalSettings = response.settings;
+                    } else {
+                        showToast('Failed to save settings', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    showToast('Failed to save settings', 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Changes';
+                }
+            });
+
+            // Cancel - reset to original
+            cancelBtn.addEventListener('click', () => {
+                enableAll.checked = originalSettings.enable_all !== false;
+                emailEnabled.checked = originalSettings.email_enabled !== false;
+                smsEnabled.checked = originalSettings.sms_enabled !== false;
+                inAppEnabled.checked = originalSettings.in_app_enabled !== false;
+                reminderTiming.value = originalSettings.reminder_timing || '1_hour';
+                confirmationTiming.value = originalSettings.confirmation_timing || 'immediately';
+                cancellationAlerts.checked = originalSettings.cancellation_alerts !== false;
+            });
+
+            // Toast notification
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-gray-800'
+                    }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Initial load
+            await fetchSettings();
+        });
+    </script>
+
+</body>
+
+</html>

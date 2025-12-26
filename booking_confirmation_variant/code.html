@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Booking Confirmation - Night Market</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#fcee88", // Night Market Yellow
+                        "primary-hover": "#e6d97a",
+                        "background-light": "#f6f8f8", // Kept for logic but overridden by dark theme preference
+                        "background-dark": "#050505", // Deep Black
+                        "card-dark": "#111111", // Slightly lighter black for cards
+                        "border-dark": "#262626", // Dark grey border
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "Plus Jakarta Sans", "sans-serif"],
+                        "body": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .text-outline-primary {
+                -webkit-text-stroke: 1px theme('colors.primary');
+                color: transparent;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-white font-body antialiased selection:bg-primary selection:text-black transition-colors duration-300 dark">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden">
+<div class="absolute inset-0 z-0 pointer-events-none opacity-5 mix-blend-overlay" data-alt="Abstract blurred map pattern background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDlD4RdUItAuQfCAxAmpmW5Yfke4gfTBwkKsO3pD5pBCgOcnXTgwiaxQbFnR2KBBs6MoX3j_RN0wUiCeodZ56K9HvPsFrqx54pRXHVUdqVAmxtKrq8aWUQMGVqKqKi3KpjTWC6kx-SHbdl5rgeHdlKrpFHIMI-3J1fMN1xbiioQ6gy0lR1l-sR2VUK3DV2jasBYCXpXEKFwGF5sNM_W0SpovdZEcGw1jVNHlJCgIF-H8fzlt1UO0s19HuVayvQfe0ZDHwoTKc_pavs'); background-size: cover; background-position: center;"></div>
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-black/80 via-background-dark/95 to-background-dark pointer-events-none transition-colors duration-300"></div>
+<div class="absolute top-0 left-0 right-0 h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<header class="relative z-10 flex items-center justify-between px-6 py-4 lg:px-10 border-b border-white/5 bg-background-dark/80 backdrop-blur-md transition-colors duration-300">
+<div class="flex items-center gap-4 text-white cursor-pointer group">
+<div class="size-8 text-primary transition-transform group-hover:-translate-x-1 flex items-center justify-center rounded-full hover:bg-white/10">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl font-bold" style="font-variation-settings: 'FILL' 1, 'wght' 700">storefront</span>
+</div>
+<div class="flex flex-col leading-none">
+<span class="text-white text-sm font-light font-display">Night</span>
+<span class="text-primary text-lg font-bold font-display uppercase tracking-wide">Market</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex flex-col items-end">
+<span class="text-sm font-medium text-white font-display">Guest User</span>
+<span class="text-xs text-slate-400 hover:text-primary cursor-pointer transition-colors">View Profile</span>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all" data-alt="User profile avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAV2an0hTiMqO8GWIm4sxmznaV1wOI1N0RYIkZAo5P64M27DwKrECaGJc-kGEp5Ww38utK-MtmgmJ1kcU3r_RLlojpvc1vWv3iCeDZ27RTUnz5KY-Dhl4HAAv8gQinHDwq_9RZSjajnRhq92sVdeuXSl5iYr96lZqvQl1sdJ3b0ukspvhkYgf5cgfgTG491TqYKQTFglKiA1rzDMjcds3RKB_VpI7NtYIJlOSlo2Dv8pzMnfejL9vX4JyI8BWSw-1KWaFx6AYXLacs");'>
+</div>
+</div>
+</header>
+<main class="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-8">
+<div class="w-full max-w-[480px] animate-in fade-in zoom-in duration-500">
+<div class="relative overflow-hidden rounded-2xl bg-card-dark shadow-[0_25px_60px_-12px_rgba(0,0,0,0.8)] border border-white/10 transition-colors duration-300">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-80"></div>
+<div class="flex flex-col items-center p-6 sm:p-8">
+<div class="mb-6 relative">
+<div class="absolute inset-0 bg-primary blur-2xl opacity-10 rounded-full"></div>
+<div class="relative flex items-center justify-center size-20 rounded-full bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 shadow-lg shadow-black/40">
+<span class="material-symbols-outlined text-primary text-4xl">calendar_clock</span>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-primary text-black rounded-full p-1 border-2 border-card-dark shadow-sm">
+<span class="material-symbols-outlined text-sm font-bold block">check</span>
+</div>
+</div>
+<h1 class="text-center text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight font-display">Confirm Your Ride</h1>
+<p class="text-center text-slate-400 text-sm mb-8 max-w-xs">You are one step away from securing your slot.</p>
+<div class="w-full bg-black/40 rounded-xl p-6 mb-8 border border-white/5 flex flex-col items-center justify-center gap-2 transition-colors relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary/40"></div>
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary text-black border border-primary">Tonight</span>
+<span class="text-slate-400 text-sm font-medium">October 24</span>
+</div>
+<div class="text-4xl sm:text-5xl font-bold text-white tracking-tight flex items-center gap-4 font-display">
+                                20:00 <span class="h-px w-6 bg-white/20"></span> 21:00
+                            </div>
+</div>
+<div class="w-full space-y-3 mb-8">
+<div class="flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all duration-200 group/item cursor-default">
+<div class="p-2.5 rounded-lg bg-white/5 text-slate-400 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined block">location_on</span>
+</div>
+<div class="flex-1">
+<p class="text-primary text-[11px] uppercase tracking-wider font-bold mb-0.5 font-display">Location</p>
+<p class="text-white font-medium">Night Market Station A</p>
+</div>
+<div class="w-12 h-12 rounded-lg bg-cover bg-center opacity-80 ring-1 ring-white/10" data-alt="Small map thumbnail showing station location" data-location="Accra, Ghana" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBA4DLLxZgUgODc2OeALrUgYDn4IUYO6e5m2JtRfZtGGp0CHf_vg930eLCv944H19_LBg2vL-zL2wsf_jMoyST7gdcV-_grAdtOP75F_X9ZHQwWz8DM6ikz05m1Rq6yOlwnLnWC1mC1THC-NlMyI82MahShtfRg1nYH3SlE1TyhgncuMY-5AwZl5U-olshCrh922YMP2xVZZBE6YwNiqoHPDcaRljtm7ZczuhfAhmg4saOfAGafLCxEH7S777SU8Fm_OEjAdavnUoc");'>
+</div>
+</div>
+<div class="flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 transition-all duration-200 group/item cursor-default">
+<div class="p-2.5 rounded-lg bg-white/5 text-slate-400 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined block">motorcycle</span>
+</div>
+<div class="flex-1">
+<p class="text-primary text-[11px] uppercase tracking-wider font-bold mb-0.5 font-display">Vehicle</p>
+<p class="text-white font-medium">Yamaha R6 (Bike #42)</p>
+</div>
+</div>
+</div>
+<button class="group w-full bg-primary hover:bg-primary-hover text-black font-bold text-lg py-4 px-6 rounded-xl shadow-[0_0_20px_rgba(252,238,136,0.2)] hover:shadow-[0_0_25px_rgba(252,238,136,0.4)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 mb-4 flex items-center justify-center gap-2 font-display">
+<span>Confirm Booking</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<a class="text-slate-500 hover:text-white text-sm font-medium transition-colors block text-center py-2" href="#">Cancel or Modify Booking</a>
+</div>
+<div class="bg-white/[0.02] p-4 text-center border-t border-white/5 transition-colors">
+<p class="text-xs text-slate-500 flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">info</span>
+                            Please arrive 10 minutes early for check-in.
+                        </p>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

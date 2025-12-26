@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schedule Performance Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e5e5e5;
+        }
+        .test-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        h1 {
+            color: #FDE047;
+        }
+        h2 {
+            color: #fff;
+            margin-top: 0;
+        }
+        button {
+            background: #FDE047;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #EACE40;
+        }
+        .result {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .value {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        .comparison {
+            background: #065f46;
+            color: #6ee7b7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Schedule Performance Test</h1>
+    <p>Compare the old sequential API approach vs the new batch endpoint</p>
+
+    <div class="test-card">
+        <h2>Old Approach (14 Sequential API Calls)</h2>
+        <button onclick="testOldApproach()">Test Old Approach</button>
+        <div id="oldResults" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>New Approach (1 Batch API Call)</h2>
+        <button onclick="testNewApproach()">Test New Approach</button>
+        <div id="newResults" class="result" style="display:none;"></div>
+    </div>
+
+    <div id="comparison" class="comparison" style="display:none;"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let oldTime = 0;
+        let newTime = 0;
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function getWeekDates() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                dates.push(date);
+            }
+            return dates;
+        }
+
+        async function testOldApproach() {
+            const weekDates = getWeekDates();
+            const startTime = performance.now();
+            let totalAPICalls = 0;
+
+            const results = document.getElementById('oldResults');
+            results.style.display = 'block';
+            results.innerHTML = '<div style="color: #fbbf24;">Testing...</div>';
+
+            try {
+                for (let i = 0; i < 7; i++) {
+                    const dateStr = formatDate(weekDates[i]);
+                    
+                    // Availability call
+                    await fetch(`${API_BASE}/availability?date=${dateStr}`);
+                    totalAPICalls++;
+                    
+                    // Bookings call
+                    await fetch(`${API_BASE}/bookings?date=${dateStr}`);
+                    totalAPICalls++;
+                }
+
+                const endTime = performance.now();
+                oldTime = endTime - startTime;
+
+                results.innerHTML = `
+                    <div class="metric">
+                        <span>Total Time:</span>
+                        <span class="value">${oldTime.toFixed(2)} ms</span>
+                    </div>
+                    <div class="metric">
+                        <span>API Calls:</span>
+                        <span class="value">${totalAPICalls}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Avg per Call:</span>
+                        <span class="value">${(oldTime / totalAPICalls).toFixed(2)} ms</span>
+                    </div>
+                `;
+
+                updateComparison();
+            } catch (error) {
+                results.innerHTML = `<div style="color: #ef4444;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testNewApproach() {
+            const weekDates = getWeekDates();
+            const startDate = formatDate(weekDates[0]);
+            const startTime = performance.now();
+
+            const results = document.getElementById('newResults');
+            results.style.display = 'block';
+            results.innerHTML = '<div style="color: #fbbf24;">Testing...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/bookings/week?start_date=${startDate}`);
+                const data = await response.json();
+
+                const endTime = performance.now();
+                newTime = endTime - startTime;
+
+                results.innerHTML = `
+                    <div class="metric">
+                        <span>Total Time:</span>
+                        <span class="value">${newTime.toFixed(2)} ms</span>
+                    </div>
+                    <div class="metric">
+                        <span>API Calls:</span>
+                        <span class="value">1</span>
+                    </div>
+                    <div class="metric">
+                        <span>Days Returned:</span>
+                        <span class="value">${data.days?.length || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Cache Header:</span>
+                        <span class="value">60 seconds</span>
+                    </div>
+                `;
+
+                updateComparison();
+            } catch (error) {
+                results.innerHTML = `<div style="color: #ef4444;">Error: ${error.message}</div>`;
+            }
+        }
+
+        function updateComparison() {
+            if (oldTime > 0 && newTime > 0) {
+                const improvement = ((oldTime - newTime) / oldTime * 100).toFixed(1);
+                const speedup = (oldTime / newTime).toFixed(1);
+                
+                const comparison = document.getElementById('comparison');
+                comparison.style.display = 'block';
+                comparison.innerHTML = `
+                    Performance Improvement: ${improvement}% faster (${speedup}x speedup)<br>
+                    Time Saved: ${(oldTime - newTime).toFixed(2)} ms
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

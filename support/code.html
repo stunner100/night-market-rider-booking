@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Support - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FDE047",
+                        "primary-hover": "#EAB308",
+                        "background-dark": "#000000",
+                        "surface-dark": "#121212",
+                        "dark-text-secondary": "#9ca3af",
+                    },
+                    fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-dark font-display text-gray-100 antialiased selection:bg-primary selection:text-black">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <div class="flex flex-col md:flex-row min-h-[calc(100vh-74px)] max-w-[1440px] mx-auto">
+        <aside class="w-full md:w-64 lg:w-72 bg-background-dark p-6 md:border-r border-gray-800/50">
+            <div class="flex flex-col gap-8 sticky top-24">
+                <div class="flex gap-4 items-center px-2">
+                    <div id="sidebarAvatar"
+                        class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 shadow-lg ring-2 ring-surface-dark"
+                        style="background-image: url('https://via.placeholder.com/56');"></div>
+                    <div class="flex flex-col">
+                        <h1 id="sidebarName" class="text-lg font-bold leading-tight text-white">Welcome Back</h1>
+                        <p class="text-gray-500 text-sm font-medium">Manage your account</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/profile_settings/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">person</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Profile</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/notification_settings/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">notifications</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Notification
+                            Settings</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-black shadow-sm"
+                        href="/support/code.html">
+                        <span class="material-symbols-outlined">help</span>
+                        <p class="text-sm font-bold leading-normal">Support</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 px-4 md:px-12 py-8 md:py-12 max-w-5xl">
+            <div class="flex flex-col gap-10">
+                <div class="flex flex-col gap-3 pb-4 border-b border-gray-800">
+                    <h1 class="text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white">Help & Support
+                    </h1>
+                    <p class="text-gray-400 text-base md:text-lg font-normal leading-relaxed max-w-2xl">Find answers to
+                        common questions or get in touch with our team.</p>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Frequently Asked Questions</h2>
+                    </div>
+                    <div class="divide-y divide-gray-800">
+                        <details class="group p-6">
+                            <summary class="flex items-center justify-between cursor-pointer list-none">
+                                <span class="text-base font-medium text-white">How do I reschedule a booking?</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 transition-transform group-open:rotate-180">expand_more</span>
+                            </summary>
+                            <p class="text-gray-400 mt-3 leading-relaxed">Go to "My Bookings", find the booking you want
+                                to change, and click the "Reschedule" button. You can choose a new date and time from
+                                the available slots.</p>
+                        </details>
+                        <details class="group p-6">
+                            <summary class="flex items-center justify-between cursor-pointer list-none">
+                                <span class="text-base font-medium text-white">What is the cancellation policy?</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 transition-transform group-open:rotate-180">expand_more</span>
+                            </summary>
+                            <p class="text-gray-400 mt-3 leading-relaxed">You can cancel a booking up to 1 hour before
+                                the scheduled start time for a full refund. Cancellations made within 1 hour may be
+                                subject to a fee.</p>
+                        </details>
+                        <details class="group p-6">
+                            <summary class="flex items-center justify-between cursor-pointer list-none">
+                                <span class="text-base font-medium text-white">How do I change my preferred zone?</span>
+                                <span
+                                    class="material-symbols-outlined text-gray-400 transition-transform group-open:rotate-180">expand_more</span>
+                            </summary>
+                            <p class="text-gray-400 mt-3 leading-relaxed">Go to specific zone setting in "Profile" page
+                                section under settings and update your preferred zone.</p>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Contact Us -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden flex flex-col">
+                        <div class="px-6 py-5 border-b border-gray-800">
+                            <h2 class="text-lg font-bold leading-tight text-white">Contact Support</h2>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col gap-6">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-primary/10 rounded-lg p-3 text-primary">
+                                    <span class="material-symbols-outlined">mail</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-white">Email Us</h3>
+                                    <p class="text-sm text-gray-400 mb-2">We typically reply within 24 hours.</p>
+                                    <a href="mailto:support@nightmarket.com"
+                                        class="text-primary hover:text-primary-hover font-medium transition-colors">support@nightmarket.com</a>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="bg-primary/10 rounded-lg p-3 text-primary">
+                                    <span class="material-symbols-outlined">call</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-white">Call Us</h3>
+                                    <p class="text-sm text-gray-400 mb-2">Available Mon-Fri, 9am - 5pm.</p>
+                                    <a href="tel:+1234567890"
+                                        class="text-primary hover:text-primary-hover font-medium transition-colors">+1
+                                        (234) 567-890</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden flex flex-col">
+                        <div class="px-6 py-5 border-b border-gray-800">
+                            <h2 class="text-lg font-bold leading-tight text-white">Send a Message</h2>
+                        </div>
+                        <form class="p-6 flex flex-col gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Subject</label>
+                                <select
+                                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none">
+                                    <option>General Inquiry</option>
+                                    <option>Technial Issue</option>
+                                    <option>Billing Question</option>
+                                    <option>Feedback</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Message</label>
+                                <textarea rows="4" placeholder="How can we help you?"
+                                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none resize-none"></textarea>
+                            </div>
+                            <button type="button"
+                                class="w-full py-3 rounded-lg bg-primary hover:bg-primary-hover text-black text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!AuthAPI.requireAuth()) return;
+
+            const user = AuthAPI.getCurrentUser();
+
+            // Populate sidebar user data
+            const sidebarName = document.getElementById('sidebarName');
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+            if (user) {
+                sidebarName.textContent = user.name || 'Welcome Back';
+                if (user.avatar_url) {
+                    sidebarAvatar.style.backgroundImage = `url('${user.avatar_url}')`;
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

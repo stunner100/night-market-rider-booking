@@ -1,0 +1,335 @@
+/* Mobile Optimizations for Night Market Booking */
+
+/* Safe area insets for devices with notches */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* Ensure body respects safe areas */
+body {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+}
+
+/* Prevent horizontal overflow */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Improve touch targets - minimum 44x44px */
+button, a, input, select, textarea, [role="button"] {
+  min-height: 44px;
+}
+
+/* Better tap highlight for mobile */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: rgba(253, 224, 71, 0.2);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improve scrolling on iOS */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Horizontal scroll containers */
+.scroll-x {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* Hide scrollbar but allow scrolling */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent text selection on UI elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Touch action optimizations */
+.touch-pan-y {
+  touch-action: pan-y;
+}
+
+.touch-pan-x {
+  touch-action: pan-x;
+}
+
+/* Mobile form improvements */
+input, select, textarea {
+  font-size: 16px !important; /* Prevents iOS zoom on focus */
+}
+
+/* Mobile typography adjustments */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.875rem !important; /* 30px */
+  }
+
+  h2 {
+    font-size: 1.5rem !important; /* 24px */
+  }
+
+  /* Reduce padding on mobile */
+  .mobile-px {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .mobile-py {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+/* Improve button states for touch */
+button:active, [role="button"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Pull to refresh visual hint */
+.pull-indicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  transition: transform 0.3s ease;
+}
+
+.pull-indicator.visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Bottom navigation safe area */
+.bottom-nav {
+  padding-bottom: calc(0.5rem + var(--safe-area-inset-bottom));
+}
+
+/* Fixed bottom button safe area */
+.fixed-bottom-button {
+  bottom: calc(1rem + var(--safe-area-inset-bottom));
+}
+
+/* Mobile modal improvements */
+@media (max-width: 640px) {
+  .modal-mobile-fullscreen {
+    position: fixed;
+    inset: 0;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-compact {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .border-subtle {
+    border-color: currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================
+   Booking Card Overlap Styles
+   ============================================= */
+
+/* Base booking card styles */
+.booking-card {
+  min-height: 40px;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* Ensure text doesn't overflow narrow cards */
+.booking-card * {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* More indicator styles */
+.more-indicator {
+  min-height: 48px;
+  backdrop-filter: blur(4px);
+}
+
+.more-indicator:hover {
+  transform: scale(1.02);
+}
+
+.more-indicator:active {
+  transform: scale(0.98);
+}
+
+/* Popover styles */
+#bookingPopover {
+  animation: popoverFadeIn 0.2s ease-out;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile-specific booking card adjustments */
+@media (max-width: 640px) {
+  .booking-card {
+    min-height: 36px;
+  }
+
+  /* Smaller padding on mobile booking cards */
+  .booking-card.p-3 {
+    padding: 8px !important;
+  }
+
+  .booking-card.p-2 {
+    padding: 6px !important;
+  }
+
+  .booking-card.p-1\.5 {
+    padding: 4px !important;
+  }
+
+  /* Ensure text is readable on narrow cards */
+  .booking-card .text-sm {
+    font-size: 11px !important;
+  }
+
+  .booking-card .text-xs {
+    font-size: 10px !important;
+  }
+
+  /* Hide zone info on very narrow mobile cards */
+  .booking-card [class*="location_on"] {
+    display: none;
+  }
+
+  /* More indicator mobile adjustments */
+  .more-indicator {
+    min-height: 40px;
+  }
+
+  .more-indicator span:first-child {
+    font-size: 12px !important;
+  }
+
+  /* Mobile popover takes more width */
+  #bookingPopover {
+    width: 90vw !important;
+    max-width: 320px !important;
+  }
+}
+
+/* Extra small screens (< 375px) */
+@media (max-width: 375px) {
+  .booking-card {
+    min-height: 32px;
+    padding: 3px !important;
+  }
+
+  .booking-card .text-sm,
+  .booking-card .text-xs {
+    font-size: 9px !important;
+  }
+
+  /* Hide badge text on very small screens */
+  .booking-card [class*="My Ride"] {
+    padding: 2px 4px !important;
+    font-size: 7px !important;
+  }
+}
+
+/* Tablet/medium screens adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .booking-card {
+    min-height: 44px;
+  }
+
+  /* Slightly smaller text on tablets when cards are narrow */
+  .booking-card.p-1\.5 .text-sm {
+    font-size: 12px;
+  }
+}
+
+/* Desktop hover effects for booking cards */
+@media (hover: hover) {
+  .booking-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .booking-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .booking-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}

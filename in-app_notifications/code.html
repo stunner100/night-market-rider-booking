@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Notifications - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "brand-yellow": "#FFE979",
+                        "brand-black": "#000000",
+                        "brand-gray": "#1A1A1A",
+                        "brand-light-gray": "#333333",
+                        "brand-text-muted": "#9CA3AF",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24
+        }
+    </style>
+</head>
+
+<body class="bg-brand-black text-white font-display overflow-x-hidden min-h-screen flex flex-col">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <div class="flex-1 flex justify-center py-8 px-4 md:px-10 lg:px-8">
+        <div class="flex flex-col max-w-[800px] w-full gap-6">
+            <!-- Header -->
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-brand-light-gray pb-6">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Notifications</h1>
+                    <p class="text-brand-text-muted text-sm">Stay updated on your rides and alerts</p>
+                </div>
+                <button id="markAllReadBtn"
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-gray hover:bg-brand-light-gray text-white text-sm font-medium transition-colors">
+                    <span class="material-symbols-outlined text-lg">done_all</span>
+                    <span>Mark all as read</span>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <button data-tab="all"
+                    class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-yellow text-black">All</button>
+                <button data-tab="unread"
+                    class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Unread
+                    <span id="unreadBadge"
+                        class="ml-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full"></span></button>
+                <button data-tab="booking_confirmed"
+                    class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Booking
+                    Updates</button>
+                <button data-tab="system_alert"
+                    class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-gray text-white hover:bg-brand-light-gray">Alerts</button>
+            </div>
+
+            <!-- Notifications List -->
+            <div id="notificationsContainer" class="flex flex-col gap-3">
+                <!-- Loading State -->
+                <div id="loadingState" class="flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center gap-4">
+                        <div
+                            class="animate-spin rounded-full h-8 w-8 border-3 border-brand-yellow border-t-transparent">
+                        </div>
+                        <p class="text-brand-text-muted text-sm">Loading notifications...</p>
+                    </div>
+                </div>
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex items-center justify-center py-12">
+                    <div class="flex flex-col items-center gap-4 text-center">
+                        <span class="material-symbols-outlined text-5xl text-brand-light-gray">notifications_off</span>
+                        <p class="text-brand-text-muted">No notifications yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load More -->
+            <div id="loadMoreContainer" class="hidden flex items-center justify-center py-4">
+                <button id="loadMoreBtn"
+                    class="text-sm font-medium text-brand-text-muted hover:text-brand-yellow transition-colors">Load
+                    earlier notifications</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!AuthAPI.requireAuth()) return;
+
+            let allNotifications = [];
+            let currentTab = 'all';
+            let offset = 0;
+            const limit = 20;
+
+            const notificationsContainer = document.getElementById('notificationsContainer');
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const unreadBadge = document.getElementById('unreadBadge');
+            const markAllReadBtn = document.getElementById('markAllReadBtn');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+
+            // Fetch notifications
+            async function fetchNotifications(append = false) {
+                try {
+                    let url = `/notifications?limit=${limit}&offset=${append ? offset : 0}`;
+                    if (currentTab === 'unread') url += '&is_read=false';
+                    else if (currentTab !== 'all') url += `&type=${currentTab}`;
+
+                    const response = await AuthAPI.authFetch(url);
+                    if (response.success) {
+                        if (append) {
+                            allNotifications = [...allNotifications, ...response.notifications];
+                        } else {
+                            allNotifications = response.notifications || [];
+                            offset = 0;
+                        }
+                        renderNotifications();
+                        updateUnreadCount();
+                    }
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                }
+            }
+
+            // Update unread badge count
+            async function updateUnreadCount() {
+                try {
+                    const response = await AuthAPI.authFetch('/notifications/count');
+                    if (response.success) {
+                        unreadBadge.textContent = response.unread_count || '';
+                        unreadBadge.style.display = response.unread_count > 0 ? 'inline' : 'none';
+                    }
+                } catch (error) { console.error('Error updating unread count:', error); }
+            }
+
+            // Render notifications
+            function renderNotifications() {
+                loadingState.classList.add('hidden');
+
+                // Remove existing notification cards
+                const existingCards = notificationsContainer.querySelectorAll('.notification-card');
+                existingCards.forEach(card => card.remove());
+
+                if (allNotifications.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    loadMoreContainer.classList.add('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+
+                allNotifications.forEach(notification => {
+                    const card = createNotificationCard(notification);
+                    notificationsContainer.appendChild(card);
+                });
+
+                // Show load more if there might be more
+                if (allNotifications.length >= limit) {
+                    loadMoreContainer.classList.remove('hidden');
+                } else {
+                    loadMoreContainer.classList.add('hidden');
+                }
+            }
+
+            // Create notification card
+            function createNotificationCard(notification) {
+                const card = document.createElement('div');
+                card.className = `notification-card group flex items-start gap-4 p-4 rounded-xl bg-brand-gray border transition-all ${notification.is_read ? 'border-brand-light-gray/50 opacity-60' : 'border-brand-yellow/30 hover:border-brand-yellow/50'
+                    }`;
+
+                const iconMap = {
+                    booking_confirmed: { icon: 'check_circle', color: 'text-green-400' },
+                    booking_cancelled: { icon: 'cancel', color: 'text-red-400' },
+                    booking_reminder: { icon: 'schedule', color: 'text-brand-yellow' },
+                    system_alert: { icon: 'warning', color: 'text-orange-400' }
+                };
+                const { icon, color } = iconMap[notification.type] || { icon: 'notifications', color: 'text-brand-yellow' };
+
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+
+                card.innerHTML = `
+      <div class="flex-shrink-0 p-2 rounded-lg bg-brand-light-gray ${color}">
+        <span class="material-symbols-outlined text-xl">${icon}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="text-white font-semibold text-sm truncate">${notification.title}</h3>
+          <span class="text-brand-text-muted text-xs whitespace-nowrap">${timeAgo}</span>
+        </div>
+        <p class="text-brand-text-muted text-sm mt-1">${notification.message}</p>
+        ${notification.booking_id ? `
+        <a href="../booking_confirmation/code.html?id=${notification.booking_id}" class="inline-flex items-center gap-1 mt-2 text-xs text-brand-yellow hover:underline">
+          <span>View Booking</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        ` : ''}
+      </div>
+      <div class="flex items-center gap-2">
+        ${!notification.is_read ? `
+        <button class="mark-read-btn p-2 rounded-lg hover:bg-brand-light-gray text-brand-text-muted hover:text-white transition-colors" title="Mark as read">
+          <span class="material-symbols-outlined text-lg">done</span>
+        </button>
+        ` : ''}
+        <button class="dismiss-btn p-2 rounded-lg hover:bg-brand-light-gray text-brand-text-muted hover:text-red-400 transition-colors" title="Dismiss">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+    `;
+
+                // Mark as read handler
+                const markReadBtn = card.querySelector('.mark-read-btn');
+                if (markReadBtn) {
+                    markReadBtn.addEventListener('click', async () => {
+                        await markAsRead(notification.id);
+                        notification.is_read = true;
+                        renderNotifications();
+                    });
+                }
+
+                // Dismiss handler (marks as read and removes)
+                card.querySelector('.dismiss-btn').addEventListener('click', async () => {
+                    if (!notification.is_read) await markAsRead(notification.id);
+                    allNotifications = allNotifications.filter(n => n.id !== notification.id);
+                    renderNotifications();
+                });
+
+                return card;
+            }
+
+            // Mark single notification as read
+            async function markAsRead(notificationId) {
+                try {
+                    await AuthAPI.authFetch(`/notifications/${notificationId}/read`, { method: 'PATCH' });
+                    await updateUnreadCount();
+                } catch (error) { console.error('Error marking as read:', error); }
+            }
+
+            // Mark all as read
+            markAllReadBtn.addEventListener('click', async () => {
+                try {
+                    await AuthAPI.authFetch('/notifications/read-all', { method: 'PUT' });
+                    allNotifications.forEach(n => n.is_read = true);
+                    renderNotifications();
+                    await updateUnreadCount();
+                } catch (error) { console.error('Error marking all as read:', error); }
+            });
+
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentTab = btn.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(tab => {
+                        if (tab.dataset.tab === currentTab) {
+                            tab.className = 'tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-yellow text-black';
+                        } else {
+                            tab.className = 'tab-btn px-4 py-2 rounded-full text-sm font-medium bg-brand-gray text-white hover:bg-brand-light-gray';
+                        }
+                    });
+                    fetchNotifications();
+                });
+            });
+
+            // Load more
+            loadMoreBtn.addEventListener('click', () => {
+                offset += limit;
+                fetchNotifications(true);
+            });
+
+            // Helper: Time ago
+            function getTimeAgo(date) {
+                const now = new Date();
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                if (minutes < 1) return 'Just now';
+                if (minutes < 60) return `${minutes}m ago`;
+                if (hours < 24) return `${hours}h ago`;
+                if (days < 7) return `${days}d ago`;
+                return date.toLocaleDateString();
+            }
+
+            // Initial load
+            await fetchNotifications();
+        });
+    </script>
+
+</body>
+
+</html>

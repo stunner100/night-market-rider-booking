@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" name="viewport" />
+    <title>Profile Settings - Night Market</title>
+    <!-- Mobile PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Night Market" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/night_market_400x400.jpg/night_market_400x400.jpg" />
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FDE047",
+                        "primary-hover": "#EAB308",
+                        "background-dark": "#000000",
+                        "surface-dark": "#121212",
+                        "dark-text-secondary": "#9ca3af",
+                    },
+                    fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-dark font-display text-gray-100 antialiased selection:bg-primary selection:text-black">
+    <!-- Auth Script -->
+    <script src="../js/auth.js"></script>
+    <!-- Navigation -->
+    <script src="../js/navigation.js"></script>
+    <div class="flex flex-col md:flex-row min-h-[calc(100vh-74px)] max-w-[1440px] mx-auto">
+        <aside class="w-full md:w-64 lg:w-72 bg-background-dark p-6 md:border-r border-gray-800/50">
+            <div class="flex flex-col gap-8 sticky top-24">
+                <div class="flex gap-4 items-center px-2">
+                    <div id="sidebarAvatar"
+                        class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 shadow-lg ring-2 ring-surface-dark"
+                        style="background-image: url('https://via.placeholder.com/56');"></div>
+                    <div class="flex flex-col">
+                        <h1 id="sidebarName" class="text-lg font-bold leading-tight text-white">Welcome Back</h1>
+                        <p class="text-gray-500 text-sm font-medium">Manage your account</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-black shadow-sm"
+                        href="/profile_settings/code.html">
+                        <span class="material-symbols-outlined">person</span>
+                        <p class="text-sm font-bold leading-normal">Profile</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/notification_settings/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">notifications</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Notification
+                            Settings</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 group transition-all duration-200"
+                        href="/support/code.html">
+                        <span
+                            class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">help</span>
+                        <p class="text-sm font-medium leading-normal text-gray-300 group-hover:text-white">Support</p>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 px-4 md:px-12 py-8 md:py-12 max-w-5xl">
+            <div class="flex flex-col gap-10">
+                <div class="flex flex-col gap-3 pb-4 border-b border-gray-800">
+                    <h1 class="text-3xl md:text-4xl font-bold leading-tight tracking-tight text-white">Profile Settings
+                    </h1>
+                    <p class="text-gray-400 text-base md:text-lg font-normal leading-relaxed max-w-2xl">Update your
+                        personal information and customize your profile.</p>
+                </div>
+
+                <!-- Profile Photo -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Profile Photo</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-6">
+                            <div id="profileAvatar"
+                                class="bg-center bg-no-repeat bg-cover rounded-full size-24 shadow-lg ring-4 ring-surface-dark"
+                                style="background-image: url('https://via.placeholder.com/96');"></div>
+                            <div class="flex flex-col gap-3">
+                                <div class="flex gap-3">
+                                    <label for="avatarInput"
+                                        class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-black text-sm font-bold cursor-pointer transition-colors">
+                                        Upload Photo
+                                    </label>
+                                    <input id="avatarInput" type="file" accept="image/*" class="hidden" />
+                                    <button id="removeAvatarBtn"
+                                        class="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm font-medium transition-colors">Remove</button>
+                                </div>
+                                <p class="text-xs text-gray-500">JPG, PNG or GIF. Max size 2MB.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Personal Information</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Full Name</label>
+                                <input id="fullName" type="text" placeholder="Enter your full name"
+                                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Email Address</label>
+                                <input id="email" type="email" placeholder="Enter your email" disabled
+                                    class="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-500 text-sm cursor-not-allowed" />
+                                <p class="text-xs text-gray-500">Email cannot be changed</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Phone Number</label>
+                                <input id="phone" type="tel" placeholder="Enter your phone number"
+                                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-400">Preferred Zone</label>
+                                <select id="preferredZone"
+                                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none appearance-none transition-all">
+                                    <option value="">Select a zone</option>
+                                    <option value="Main Campus">Main Campus</option>
+                                    <option value="Diaspora">Diaspora</option>
+                                    <option value="Night Market">Night Market</option>
+                                    <option value="Pent & Beyond">Pent & Beyond</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="bg-surface-dark rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-800">
+                        <h2 class="text-lg font-bold leading-tight text-white">Account Information</h2>
+                    </div>
+                    <div class="flex flex-col divide-y divide-gray-800">
+                        <div class="flex items-center justify-between p-6">
+                            <div>
+                                <p class="text-sm font-medium text-white">Rider ID</p>
+                                <p id="riderId" class="text-sm text-gray-400 font-mono mt-1">-</p>
+                            </div>
+                            <button
+                                onclick="navigator.clipboard.writeText(document.getElementById('riderId').textContent)"
+                                class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-lg">content_copy</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between p-6">
+                            <div>
+                                <p class="text-sm font-medium text-white">Account Type</p>
+                                <p id="accountType" class="text-sm text-gray-400 mt-1">Rider</p>
+                            </div>
+                            <span
+                                class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">Active</span>
+                        </div>
+                        <div class="flex items-center justify-between p-6">
+                            <div>
+                                <p class="text-sm font-medium text-white">Member Since</p>
+                                <p id="memberSince" class="text-sm text-gray-400 mt-1">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="bg-surface-dark rounded-2xl border border-red-900/50 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-red-900/50 bg-red-900/10">
+                        <h2 class="text-lg font-bold leading-tight text-red-400">Danger Zone</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-white">Delete Account</p>
+                                <p class="text-sm text-gray-400 mt-1">Permanently delete your account and all data.</p>
+                            </div>
+                            <button id="deleteAccountBtn"
+                                class="px-4 py-2 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/30 text-sm font-medium transition-colors">Delete
+                                Account</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end gap-4 py-6 mt-4 border-t border-gray-800">
+                    <button id="cancelBtn"
+                        class="px-6 py-3 rounded-lg text-sm font-bold text-gray-300 hover:bg-gray-800 transition-colors">Cancel</button>
+                    <button id="saveBtn"
+                        class="px-6 py-3 rounded-lg bg-primary hover:bg-primary-hover text-black text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">Save
+                        Changes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Check authentication
+            if (!AuthAPI.requireAuth()) return;
+
+            const user = AuthAPI.getCurrentUser();
+
+            // DOM Elements
+            const sidebarName = document.getElementById('sidebarName');
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+            const profileAvatar = document.getElementById('profileAvatar');
+            const fullName = document.getElementById('fullName');
+            const email = document.getElementById('email');
+            const phone = document.getElementById('phone');
+            const preferredZone = document.getElementById('preferredZone');
+            const riderId = document.getElementById('riderId');
+            const accountType = document.getElementById('accountType');
+            const memberSince = document.getElementById('memberSince');
+            const avatarInput = document.getElementById('avatarInput');
+            const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+            let originalData = {};
+
+            // Populate user data
+            function populateUserData() {
+                if (user) {
+                    sidebarName.textContent = user.name || 'Welcome Back';
+                    fullName.value = user.name || '';
+                    email.value = user.email || '';
+                    phone.value = user.phone || '';
+                    preferredZone.value = user.preferred_zone || '';
+                    riderId.textContent = user.rider_id || '-';
+                    accountType.textContent = user.role === 'admin' ? 'Administrator' : 'Rider';
+
+                    if (user.created_at) {
+                        memberSince.textContent = new Date(user.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                        });
+                    }
+
+                    if (user.avatar_url) {
+                        sidebarAvatar.style.backgroundImage = `url('${user.avatar_url}')`;
+                        profileAvatar.style.backgroundImage = `url('${user.avatar_url}')`;
+                    }
+
+                    originalData = {
+                        name: user.name,
+                        phone: user.phone,
+                        preferred_zone: user.preferred_zone
+                    };
+                }
+            }
+
+            // Avatar upload (preview only - would need backend endpoint for actual upload)
+            avatarInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast('Image size must be less than 2MB', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        profileAvatar.style.backgroundImage = `url('${e.target.result}')`;
+                        sidebarAvatar.style.backgroundImage = `url('${e.target.result}')`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Remove avatar
+            removeAvatarBtn.addEventListener('click', () => {
+                profileAvatar.style.backgroundImage = "url('https://via.placeholder.com/96')";
+                sidebarAvatar.style.backgroundImage = "url('https://via.placeholder.com/56')";
+            });
+
+            // Save profile
+            saveBtn.addEventListener('click', async () => {
+                try {
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
+
+                    const response = await AuthAPI.authFetch('/profile', {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            name: fullName.value,
+                            phone: phone.value,
+                            preferred_zone: preferredZone.value
+                        })
+                    });
+
+                    if (response.success) {
+                        showToast('Profile updated successfully!', 'success');
+                        // Update local storage
+                        const updatedUser = { ...user, name: fullName.value, phone: phone.value, preferred_zone: preferredZone.value };
+                        localStorage.setItem('user', JSON.stringify(updatedUser));
+                        originalData = { name: fullName.value, phone: phone.value, preferred_zone: preferredZone.value };
+                    } else {
+                        showToast(response.message || 'Failed to update profile', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    showToast('Failed to update profile', 'error');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Changes';
+                }
+            });
+
+            // Cancel - reset to original
+            cancelBtn.addEventListener('click', () => {
+                fullName.value = originalData.name || '';
+                phone.value = originalData.phone || '';
+                preferredZone.value = originalData.preferred_zone || '';
+            });
+
+            // Delete account warning
+            deleteAccountBtn.addEventListener('click', () => {
+                showToast('Please contact support to delete your account', 'info');
+            });
+
+            // Toast notification
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-gray-800'}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Initial load
+            populateUserData();
+        });
+    </script>
+
+</body>
+
+</html>
