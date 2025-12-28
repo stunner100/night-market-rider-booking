@@ -10,6 +10,44 @@ const AuthAPI = {
   USER_KEY: 'nm_current_user',
 
   /**
+   * Format phone number from international (+233) to local (0XX) format
+   * @param {string} phone - Phone number in any format
+   * @returns {string} - Phone number in local format (0XXXXXXXXX)
+   */
+  formatPhoneLocal(phone) {
+    if (!phone) return '';
+    // Remove all non-digit characters except leading +
+    let cleaned = phone.replace(/[^\d+]/g, '');
+    // Convert +233 to 0
+    if (cleaned.startsWith('+233')) {
+      cleaned = '0' + cleaned.slice(4);
+    } else if (cleaned.startsWith('233')) {
+      cleaned = '0' + cleaned.slice(3);
+    }
+    return cleaned;
+  },
+
+  /**
+   * Format phone number from local (0XX) to international (+233) format
+   * @param {string} phone - Phone number in any format
+   * @returns {string} - Phone number in international format (+233XXXXXXXXX)
+   */
+  formatPhoneInternational(phone) {
+    if (!phone) return '';
+    // Remove all non-digit characters
+    let cleaned = phone.replace(/\D/g, '');
+    // Convert leading 0 to +233
+    if (cleaned.startsWith('0')) {
+      cleaned = '+233' + cleaned.slice(1);
+    } else if (!cleaned.startsWith('233')) {
+      cleaned = '+233' + cleaned;
+    } else {
+      cleaned = '+' + cleaned;
+    }
+    return cleaned;
+  },
+
+  /**
    * Register a new user
    * @param {string} name - User's full name
    * @param {string} phone - User's phone number

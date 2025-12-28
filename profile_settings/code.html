@@ -253,7 +253,7 @@
                     sidebarName.textContent = user.name || 'Welcome Back';
                     fullName.value = user.name || '';
                     email.value = user.email || '';
-                    phone.value = user.phone || '';
+                    phone.value = AuthAPI.formatPhoneLocal(user.phone) || '';
                     preferredZone.value = user.preferred_zone || '';
                     riderId.textContent = user.rider_id || '-';
                     accountType.textContent = user.role === 'admin' ? 'Administrator' : 'Rider';
@@ -271,7 +271,7 @@
 
                     originalData = {
                         name: user.name,
-                        phone: user.phone,
+                        phone: AuthAPI.formatPhoneLocal(user.phone),
                         preferred_zone: user.preferred_zone
                     };
                 }
