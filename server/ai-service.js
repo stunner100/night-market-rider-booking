@@ -1,6 +1,6 @@
 /**
  * Night Market AI Service
- * Handles all AI-powered features using Qwen (Alibaba Cloud)
+ * Handles all AI-powered features using Groq (Llama models)
  */
 
 import OpenAI from 'openai';
@@ -9,11 +9,15 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Initialize Qwen client via OpenAI-compatible API
+// Initialize Groq client via OpenAI-compatible API
 const openai = new OpenAI({
-  apiKey: process.env.DASHSCOPE_API_KEY,
-  baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1'
 });
+
+// Model configuration
+const PRIMARY_MODEL = 'llama-3.3-70b-versatile';  // Main model for chatbot
+const FAST_MODEL = 'llama-3.1-8b-instant';         // Fast model for simple tasks
 
 // System prompts for different AI features
 const CHATBOT_SYSTEM_PROMPT = `You are the Night Market AI Assistant, a helpful booking assistant for a bike riding service at night markets.
@@ -28,17 +32,27 @@ Your capabilities:
 Service Details:
 - Operating hours: 8:00 AM to 10:00 PM daily
 - Zones available: Main Campus, Diaspora, Night Market, Pent & Beyond
-- Pricing: $20 per hour
 - Duration options: 30, 45, 60, 90, 120, 180, 240 minutes
-- Daily capacity: 20 bikes (first 20 bookings get priority for any slot)
+- This is a FREE community bike sharing service - no payment required
+
+IMPORTANT - Streamlined Booking Flow:
+- Make booking as EASY as possible with minimal questions
+- If user says "book a ride" without details, use smart defaults:
+  * Default duration: 60 minutes
+  * Default zone: Main Campus
+  * Default date: today (if time allows) or tomorrow
+  * Default time: next available hour slot
+- Only ask for date/time if user doesn't specify
+- Skip asking about duration and zone unless user wants to customize
+- NEVER mention pricing or costs - this is a free service
+- After getting date and time, book immediately without extra confirmation
+- Be proactive: "I'll book you for [time] at Main Campus for 1 hour - done!"
 
 Guidelines:
-- Be friendly, concise, and helpful
-- When users want to book, ask for: date, time, duration, and zone (if not specified)
-- Confirm details before making bookings
-- Suggest alternatives if requested slot is unavailable
-- Use 24-hour time format internally but display 12-hour format to users
-- Always confirm the user's rider_id before making changes
+- Be friendly, ultra-concise, and action-oriented
+- Prioritize speed - book first, details later
+- Use 12-hour format for display (10:00 AM, not 10:00)
+- Only ask clarifying questions if absolutely necessary
 
 Current date and time will be provided in each request.`;
 
@@ -232,7 +246,7 @@ Remember to be helpful and confirm actions before executing them.`
     };
 
     const response = await openai.chat.completions.create({
-      model: "qwen-plus",
+      model: PRIMARY_MODEL,
       messages: [systemMessage, ...messages],
       tools: BOOKING_FUNCTIONS,
       tool_choice: "auto",
@@ -262,7 +276,7 @@ Remember to be helpful and confirm actions before executing them.`
 
       // Get final response after function execution
       const finalResponse = await openai.chat.completions.create({
-        model: "qwen-plus",
+        model: PRIMARY_MODEL,
         messages: [
           systemMessage,
           ...messages,
@@ -335,7 +349,7 @@ Respond in this JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "qwen-plus",
+      model: PRIMARY_MODEL,
       messages: [
         { role: "system", content: RECOMMENDATION_SYSTEM_PROMPT },
         { role: "user", content: prompt }
@@ -414,7 +428,7 @@ Provide analysis in this JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "qwen-plus",
+      model: PRIMARY_MODEL,
       messages: [
         { role: "system", content: ANALYTICS_SYSTEM_PROMPT },
         { role: "user", content: prompt }
@@ -499,7 +513,7 @@ Upcoming Bookings: ${context.upcoming_count}`;
     }
 
     const response = await openai.chat.completions.create({
-      model: "qwen-turbo",
+      model: FAST_MODEL,
       messages: [
         { role: "system", content: NOTIFICATION_SYSTEM_PROMPT },
         { role: "user", content: prompt }
@@ -512,7 +526,7 @@ Upcoming Bookings: ${context.upcoming_count}`;
 
     // Generate a title as well
     const titleResponse = await openai.chat.completions.create({
-      model: "qwen-turbo",
+      model: FAST_MODEL,
       messages: [
         { role: "system", content: "Generate a short, catchy title (max 5 words) for this notification. Respond with just the title." },
         { role: "user", content: notificationText }
@@ -570,7 +584,7 @@ Return JSON with extracted search parameters:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "qwen-turbo",
+      model: FAST_MODEL,
       messages: [
         { role: "system", content: "You are a search query parser. Extract structured parameters from natural language queries. Always respond with valid JSON." },
         { role: "user", content: prompt }

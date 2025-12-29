@@ -81,9 +81,9 @@ function calculateEndTime(startTime, durationMinutes) {
   return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
 }
 
-// Helper: Calculate cost
-function calculateCost(durationMinutes, hourlyRate = 20) {
-  return (durationMinutes / 60) * hourlyRate;
+// Helper: Calculate cost (free service - always returns 0)
+function calculateCost(durationMinutes, hourlyRate = 0) {
+  return 0;
 }
 
 // Validation middleware
@@ -184,6 +184,22 @@ function generateRiderId() {
   return `RDR-${num}`;
 }
 
+// Helper: Normalize phone number to +233 format for database storage/lookup
+function normalizePhone(phone) {
+  if (!phone) return '';
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, '');
+  // Convert local format (0XX) to international (+233)
+  if (cleaned.startsWith('0')) {
+    cleaned = '+233' + cleaned.slice(1);
+  } else if (cleaned.startsWith('233')) {
+    cleaned = '+' + cleaned;
+  } else if (!cleaned.startsWith('+')) {
+    cleaned = '+233' + cleaned;
+  }
+  return cleaned;
+}
+
 // =====================
 // AUTH ROUTES
 // =====================
@@ -202,10 +218,13 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
+    // Normalize phone number to +233 format
+    const normalizedPhone = normalizePhone(phone);
+
     // Check if phone number already exists
     const existingUser = await pool.query(
       'SELECT id FROM riders WHERE phone = $1',
-      [phone]
+      [normalizedPhone]
     );
 
     if (existingUser.rows.length > 0) {
@@ -229,14 +248,14 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // Generate placeholder email from phone (required by schema)
-    const placeholderEmail = `${phone.replace(/\D/g, '')}@rider.nightmarket.local`;
+    const placeholderEmail = `${normalizedPhone.replace(/\D/g, '')}@rider.nightmarket.local`;
 
     // Insert new rider
     const result = await pool.query(
       `INSERT INTO riders (rider_id, name, email, phone, role, is_verified)
        VALUES ($1, $2, $3, $4, 'rider', FALSE)
        RETURNING rider_id, name, email, phone, role, is_verified, created_at`,
-      [riderId, name, placeholderEmail, phone]
+      [riderId, name, placeholderEmail, normalizedPhone]
     );
 
     const rider = result.rows[0];
@@ -285,10 +304,19 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Find user by phone number
+    // Normalize phone number and find user
+    const normalizedPhone = normalizePhone(phone);
+    // Also try various formats for backwards compatibility
+    const phoneDigits = phone.replace(/\D/g, '');
+    const phoneWithZero = phoneDigits.startsWith('233') ? '0' + phoneDigits.slice(3) : (phoneDigits.startsWith('0') ? phoneDigits : '0' + phoneDigits);
+    // Handle format with space after country code: +233 XXXXXXXXX
+    const phoneWithSpace = phoneDigits.startsWith('0')
+      ? '+233 ' + phoneDigits.slice(1)
+      : (phoneDigits.startsWith('233') ? '+233 ' + phoneDigits.slice(3) : '+233 ' + phoneDigits);
+
     const result = await pool.query(
-      'SELECT * FROM riders WHERE phone = $1',
-      [phone]
+      'SELECT * FROM riders WHERE phone = $1 OR phone = $2 OR phone = $3 OR phone = $4 OR phone = $5',
+      [normalizedPhone, phoneDigits, phoneWithZero, '+' + phoneDigits, phoneWithSpace]
     );
 
     if (result.rows.length === 0) {
@@ -510,8 +538,9 @@ app.post('/api/bookings', validateBookingData, async (req, res) => {
     } = req.body;
 
     const end_time = calculateEndTime(start_time, duration_minutes);
-    const hourly_rate = 20.00;
-    const total_cost = calculateCost(duration_minutes, hourly_rate);
+    // Free service - no cost
+    const hourly_rate = 0;
+    const total_cost = 0;
 
     // Step 1: Count total bookings for the day (20-bike capacity system)
     const dailyCountQuery = `
@@ -1442,8 +1471,9 @@ async function executeChatFunction(functionName, args, userContext) {
       const endMins = totalMinutes % 60;
       const end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
 
-      const hourly_rate = 20.00;
-      const total_cost = (duration_minutes / 60) * hourly_rate;
+      // Free service - no cost
+      const hourly_rate = 0;
+      const total_cost = 0;
 
       // Check availability
       const dailyCountResult = await pool.query(

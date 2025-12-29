@@ -764,7 +764,7 @@
           }
 
           // Calculate overlap layout for all bookings in a day
-          // Returns bookings with layout info (column, totalColumns, isHidden)
+          // Uses Union-Find to group transitively overlapping bookings for consistent column widths
           function calculateOverlapLayout(bookings, currentUserId) {
             if (!bookings || bookings.length === 0) return { visible: [], moreIndicators: [] };
 
@@ -778,86 +778,101 @@
               isMyBooking: b.rider_id === currentUserId
             }));
 
-            // Sort by start time, then by duration (longer first), then prioritize "my bookings"
-            enrichedBookings.sort((a, b) => {
-              if (a.startMins !== b.startMins) return a.startMins - b.startMins;
-              const aDuration = a.endMins - a.startMins;
-              const bDuration = b.endMins - b.startMins;
-              if (aDuration !== bDuration) return bDuration - aDuration;
-              if (a.isMyBooking !== b.isMyBooking) return a.isMyBooking ? -1 : 1;
-              return 0;
-            });
+            // Union-Find data structure for grouping overlapping bookings
+            const parent = new Map();
+            const find = (id) => {
+              if (!parent.has(id)) parent.set(id, id);
+              if (parent.get(id) !== id) {
+                parent.set(id, find(parent.get(id))); // Path compression
+              }
+              return parent.get(id);
+            };
+            const union = (a, b) => {
+              const rootA = find(a);
+              const rootB = find(b);
+              if (rootA !== rootB) parent.set(rootA, rootB);
+            };
 
-            // Assign columns using a greedy algorithm
-            // Each column tracks when it becomes free (end time of last booking)
-            const columns = []; // Array of { endTime: number, bookings: [] }
-            const layoutResults = [];
-
-            enrichedBookings.forEach(booking => {
-              // Find the first column where this booking fits (doesn't overlap)
-              let assignedCol = -1;
-              for (let i = 0; i < columns.length; i++) {
-                if (booking.startMins >= columns[i].endTime) {
-                  assignedCol = i;
-                  break;
+            // Union all overlapping booking pairs (creates transitive groups)
+            for (let i = 0; i < enrichedBookings.length; i++) {
+              for (let j = i + 1; j < enrichedBookings.length; j++) {
+                if (bookingsOverlap(enrichedBookings[i], enrichedBookings[j])) {
+                  union(enrichedBookings[i].booking_id, enrichedBookings[j].booking_id);
                 }
               }
+            }
 
-              // If no existing column fits, create a new one
-              if (assignedCol === -1) {
-                assignedCol = columns.length;
-                columns.push({ endTime: 0, bookings: [] });
-              }
-
-              // Update column end time
-              columns[assignedCol].endTime = booking.endMins;
-              columns[assignedCol].bookings.push(booking);
-
-              layoutResults.push({
-                booking,
-                column: assignedCol,
-                isMyBooking: booking.isMyBooking
-              });
+            // Group bookings by their root parent
+            const groups = new Map();
+            enrichedBookings.forEach(b => {
+              const root = find(b.booking_id);
+              if (!groups.has(root)) groups.set(root, []);
+              groups.get(root).push(b);
             });
 
-            // Now determine how many columns each booking actually needs to consider
-            // by checking overlaps at each point in time
-            const totalColumns = columns.length;
+            // Process each group independently
+            const layoutResults = [];
 
-            // Group overlapping bookings to determine actual column counts at each time slice
-            layoutResults.forEach(item => {
-              // Find all bookings that overlap with this one
-              const overlapping = layoutResults.filter(other =>
-                bookingsOverlap(item.booking, other.booking)
-              );
-              item.overlappingCount = overlapping.length;
+            groups.forEach(groupBookings => {
+              // Sort by start time, then duration (longer first), then user's bookings first
+              groupBookings.sort((a, b) => {
+                if (a.startMins !== b.startMins) return a.startMins - b.startMins;
+                const aDur = a.endMins - a.startMins;
+                const bDur = b.endMins - b.startMins;
+                if (aDur !== bDur) return bDur - aDur;
+                if (a.isMyBooking !== b.isMyBooking) return a.isMyBooking ? -1 : 1;
+                return 0;
+              });
 
-              // Get the max column index among overlapping bookings
-              const maxColInGroup = Math.max(...overlapping.map(o => o.column));
-              item.columnsInGroup = maxColInGroup + 1;
+              // Greedy column assignment within this group
+              const columns = []; // Each entry tracks column end time
+              const groupResults = [];
+
+              groupBookings.forEach(booking => {
+                // Find first column where this booking fits
+                let col = columns.findIndex(endTime => booking.startMins >= endTime);
+                if (col === -1) {
+                  col = columns.length;
+                  columns.push(0);
+                }
+                columns[col] = booking.endMins;
+
+                groupResults.push({
+                  booking,
+                  column: col,
+                  isMyBooking: booking.isMyBooking
+                });
+              });
+
+              // Set uniform totalColumns for entire group
+              const groupTotalColumns = columns.length;
+              groupResults.forEach(item => {
+                item.groupTotalColumns = groupTotalColumns;
+                layoutResults.push(item);
+              });
             });
 
             // Separate visible bookings from hidden ones
             const visible = [];
-            const hiddenByTimeSlot = {}; // Group hidden bookings by their time range
+            const hiddenByTimeSlot = {};
 
             layoutResults.forEach(item => {
-              // Always show "my bookings" if possible, prioritize them
-              const effectiveMaxCols = maxCols;
+              if (item.column < maxCols) {
+                // Calculate effective totalColumns for display (cap at maxCols + 1 for "+more" space)
+                const displayTotalColumns = Math.min(item.groupTotalColumns, maxCols + 1);
+                const hasMore = item.groupTotalColumns > maxCols;
 
-              if (item.column < effectiveMaxCols) {
-                // This booking is visible
                 visible.push({
                   booking: item.booking,
                   isMyBooking: item.isMyBooking,
                   layout: {
                     column: item.column,
-                    totalColumns: Math.min(item.columnsInGroup, effectiveMaxCols + 1), // +1 for the "more" indicator
-                    hasMore: item.columnsInGroup > effectiveMaxCols
+                    totalColumns: displayTotalColumns,
+                    hasMore: hasMore
                   }
                 });
               } else {
-                // This booking is hidden - group by time slot for "+N more" indicator
+                // Hidden booking - group by time slot
                 const key = `${item.booking.start_time}-${item.booking.end_time}`;
                 if (!hiddenByTimeSlot[key]) {
                   hiddenByTimeSlot[key] = {
@@ -870,8 +885,7 @@
               }
             });
 
-            // Create "+N more" indicators
-            // Merge nearby hidden bookings into consolidated indicators
+            // Create "+N more" indicators for hidden bookings
             const moreIndicators = [];
             const processedHidden = new Set();
 
@@ -886,11 +900,11 @@
                 // Mark all as processed
                 overlappingHidden.forEach(h => processedHidden.add(h.booking.booking_id));
 
-                // Calculate the time span that covers all these hidden bookings
+                // Calculate time span covering all hidden bookings
                 const minStart = Math.min(...overlappingHidden.map(h => h.booking.startMins));
                 const maxEnd = Math.max(...overlappingHidden.map(h => h.booking.endMins));
 
-                // Find how many visible columns exist at this time
+                // Find visible columns at this time for positioning
                 const visibleAtTime = visible.filter(v =>
                   bookingsOverlap(v.booking, item.booking)
                 );
@@ -922,81 +936,122 @@
             bookingDataStore.set(booking.booking_id, booking);
 
             // Calculate horizontal positioning based on layout
-            let leftStyle = '4px';
-            let rightStyle = '4px';
+            // Fixed gap distribution for consistent spacing
+            const GAP = 4; // Total gap between cards in pixels
+            let leftStyle = `${GAP/2}px`;
+            let rightStyle = `${GAP/2}px`;
             let widthStyle = '';
 
             if (layout && layout.totalColumns > 1) {
-              const colWidth = 100 / layout.totalColumns;
+              const totalCols = layout.totalColumns;
+              const colWidth = 100 / totalCols;
               const leftPercent = layout.column * colWidth;
-              leftStyle = `calc(${leftPercent}% + 2px)`;
+              // Consistent gap: each column gets GAP/2 on each side
+              leftStyle = `calc(${leftPercent}% + ${GAP/2}px)`;
               rightStyle = 'auto';
-              widthStyle = `calc(${colWidth}% - 4px)`;
+              widthStyle = `calc(${colWidth}% - ${GAP}px)`;
             }
 
-            const isCompact = layout && layout.totalColumns >= 3;
+            // Determine display mode based on column count and viewport
             const isMobileView = isMobile();
-            const isVeryCompact = (layout && layout.totalColumns >= 2 && isMobileView) || (layout && layout.totalColumns >= 3);
+            const totalCols = layout?.totalColumns || 1;
+
+            // Display modes: minimal, compact, standard, full
+            let displayMode = 'full';
+            if (totalCols >= 4 || (totalCols >= 3 && isMobileView)) {
+              displayMode = 'minimal';
+            } else if (totalCols >= 3 || (totalCols >= 2 && isMobileView)) {
+              displayMode = 'compact';
+            } else if (totalCols >= 2) {
+              displayMode = 'standard';
+            }
 
             // Base classes - ALL cards are now clickable
             let className = 'absolute booking-card overflow-hidden transition-all z-10 cursor-pointer ';
+            className += `booking-card--${displayMode} `;
 
             if (isMyBooking) {
-              className += 'bg-brand-yellow text-black rounded-xl shadow-lg shadow-brand-yellow/10 hover:bg-[#EACE40] border border-white/20';
+              className += 'bg-brand-yellow text-black rounded-xl shadow-lg shadow-brand-yellow/10 hover:bg-[#EACE40] hover:shadow-xl hover:z-20 border border-white/20';
             } else {
-              className += 'bg-green-500/20 rounded-lg border border-green-500/30 hover:bg-green-500/30 hover:border-green-500/50';
+              className += 'bg-green-500/20 rounded-lg border border-green-500/30 hover:bg-green-500/30 hover:border-green-500/50 hover:z-20';
             }
 
-            // Padding based on compactness
-            const paddingClass = isVeryCompact ? 'p-1.5' : (isCompact ? 'p-2' : 'p-3');
+            // Padding based on display mode
+            const paddingClass = displayMode === 'minimal' ? 'p-1' :
+                                 displayMode === 'compact' ? 'p-1.5' :
+                                 displayMode === 'standard' ? 'p-2' : 'p-3';
             className += ` ${paddingClass}`;
 
-            // Build inner content based on available space
+            // Tooltip for truncated content
+            const tooltipText = `${isMyBooking ? 'My Ride' : booking.rider_name}&#10;${startTime} - ${endTime}&#10;${booking.zone}`;
+
+            // Build inner content based on display mode
             let innerContent = '';
 
             if (isMyBooking) {
-              if (isVeryCompact) {
-                // Very compact: just time
-                innerContent = `
-                  <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-0.5">My Ride</div>
-                  <div class="text-[10px] font-bold leading-tight">${startTime}-${endTime}</div>
-                `;
-              } else if (isCompact) {
-                // Compact: badge + time
-                innerContent = `
-                  <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-1">My Ride</div>
-                  <div class="text-xs font-bold leading-tight">${startTime} - ${endTime}</div>
-                `;
-              } else {
-                // Full: badge + time + zone
-                innerContent = `
-                  <div class="flex justify-between items-start mb-1"><span class="text-[10px] font-black tracking-wider uppercase bg-black/10 px-1.5 py-0.5 rounded">My Ride</span></div>
-                  <div class="text-sm font-bold leading-tight">${startTime} - ${endTime}</div>
-                  <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="text-[10px] font-bold">${booking.zone}</span></div>
-                `;
+              switch (displayMode) {
+                case 'minimal':
+                  // Minimal: icon or very short badge + time
+                  innerContent = `
+                    <div class="text-[8px] font-black uppercase bg-black/10 px-0.5 py-0.5 rounded inline-block leading-none">Me</div>
+                    <div class="text-[9px] font-bold leading-tight mt-0.5">${startTime}</div>
+                  `;
+                  break;
+                case 'compact':
+                  // Compact: badge + time
+                  innerContent = `
+                    <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-0.5">My Ride</div>
+                    <div class="text-[10px] font-bold leading-tight">${startTime}-${endTime}</div>
+                  `;
+                  break;
+                case 'standard':
+                  // Standard: badge + full time range
+                  innerContent = `
+                    <div class="text-[9px] font-black uppercase bg-black/10 px-1 py-0.5 rounded inline-block mb-1">My Ride</div>
+                    <div class="text-xs font-bold leading-tight">${startTime} - ${endTime}</div>
+                  `;
+                  break;
+                default:
+                  // Full: badge + time + zone
+                  innerContent = `
+                    <div class="flex justify-between items-start mb-1"><span class="text-[10px] font-black tracking-wider uppercase bg-black/10 px-1.5 py-0.5 rounded">My Ride</span></div>
+                    <div class="text-sm font-bold leading-tight">${startTime} - ${endTime}</div>
+                    <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[14px]">location_on</span><span class="text-[10px] font-bold">${booking.zone}</span></div>
+                  `;
               }
             } else {
-              if (isVeryCompact) {
-                // Very compact: just name initial + time
-                const initial = booking.rider_name.charAt(0).toUpperCase();
-                innerContent = `
-                  <div class="text-[10px] font-bold text-green-200 truncate">${initial}.</div>
-                  <div class="text-[9px] text-green-300/80">${startTime}</div>
-                `;
-              } else if (isCompact) {
-                // Compact: short name + time
-                const shortName = booking.rider_name.split(' ')[0];
-                innerContent = `
-                  <div class="text-[10px] font-bold text-green-200 truncate">${shortName}</div>
-                  <div class="text-[9px] text-green-300/80">${startTime}-${endTime}</div>
-                `;
-              } else {
-                // Full: name + time + zone
-                innerContent = `
-                  <div class="text-xs font-bold text-green-200 truncate mb-0.5">${booking.rider_name}</div>
-                  <div class="text-[10px] text-green-300/80 font-medium">${startTime} - ${endTime}</div>
-                  <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[12px] text-green-400">location_on</span><span class="text-[10px] text-green-300/70">${booking.zone}</span></div>
-                `;
+              switch (displayMode) {
+                case 'minimal':
+                  // Minimal: just initial
+                  const initial = booking.rider_name.charAt(0).toUpperCase();
+                  innerContent = `
+                    <div class="text-[10px] font-bold text-green-200">${initial}.</div>
+                    <div class="text-[8px] text-green-300/80">${startTime}</div>
+                  `;
+                  break;
+                case 'compact':
+                  // Compact: name initial + time
+                  const shortInitial = booking.rider_name.charAt(0).toUpperCase();
+                  innerContent = `
+                    <div class="text-[10px] font-bold text-green-200 truncate">${shortInitial}.</div>
+                    <div class="text-[9px] text-green-300/80">${startTime}</div>
+                  `;
+                  break;
+                case 'standard':
+                  // Standard: short name + time
+                  const shortName = booking.rider_name.split(' ')[0];
+                  innerContent = `
+                    <div class="text-[10px] font-bold text-green-200 truncate">${shortName}</div>
+                    <div class="text-[9px] text-green-300/80">${startTime}-${endTime}</div>
+                  `;
+                  break;
+                default:
+                  // Full: name + time + zone
+                  innerContent = `
+                    <div class="text-xs font-bold text-green-200 truncate mb-0.5">${booking.rider_name}</div>
+                    <div class="text-[10px] text-green-300/80 font-medium">${startTime} - ${endTime}</div>
+                    <div class="flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[12px] text-green-400">location_on</span><span class="text-[10px] text-green-300/70">${booking.zone}</span></div>
+                  `;
               }
             }
 
@@ -1008,39 +1063,47 @@
               styleStr += ` right: ${rightStyle};`;
             }
 
-            // Add data attributes and onclick for detail view
-            const dataAttrs = `data-booking-id="${booking.booking_id}" data-rider="${booking.rider_name}" data-time="${startTime}-${endTime}" data-zone="${booking.zone}"`;
+            // Add data attributes, tooltip, and onclick for detail view
+            const dataAttrs = `data-booking-id="${booking.booking_id}" data-rider="${booking.rider_name}" data-time="${startTime}-${endTime}" data-zone="${booking.zone}" title="${tooltipText}"`;
 
             return `<div class="${className}" style="${styleStr}" ${dataAttrs} onclick="showBookingDetails(this, event)">${innerContent}</div>`;
           }
 
           // Create "+N more" indicator HTML
-          function createMoreIndicatorHTML(indicator) {
+          function createMoreIndicatorHTML(indicator, currentUserId) {
             const startTime = `${String(Math.floor(indicator.startMins / 60)).padStart(2, '0')}:${String(indicator.startMins % 60).padStart(2, '0')}`;
             const endTime = `${String(Math.floor(indicator.endMins / 60)).padStart(2, '0')}:${String(indicator.endMins % 60).padStart(2, '0')}`;
             const { top, height } = getBookingPosition(startTime, endTime);
 
-            // Calculate horizontal positioning
+            // Calculate horizontal positioning with consistent gap distribution
+            const GAP = 4;
             const colWidth = 100 / indicator.totalColumns;
             const leftPercent = indicator.column * colWidth;
-            const leftStyle = `calc(${leftPercent}% + 2px)`;
-            const widthStyle = `calc(${colWidth}% - 4px)`;
+            const leftStyle = `calc(${leftPercent}% + ${GAP/2}px)`;
+            const widthStyle = `calc(${colWidth}% - ${GAP}px)`;
 
             // Encode bookings data for the popover
             const bookingsData = encodeURIComponent(JSON.stringify(indicator.bookings.map(b => ({
               id: b.booking_id,
               name: b.rider_name,
               time: `${b.start_time.slice(0, 5)} - ${b.end_time.slice(0, 5)}`,
-              zone: b.zone
+              zone: b.zone,
+              isMyBooking: b.rider_id === currentUserId
             }))));
 
+            // Build preview text for first 1-2 bookings
+            const previewNames = indicator.bookings.slice(0, 2).map(b =>
+              b.rider_id === currentUserId ? 'My Ride' : b.rider_name.split(' ')[0]
+            ).join(', ');
+
             return `
-              <div class="absolute bg-gray-700/80 hover:bg-gray-600/90 rounded-lg border border-gray-500/30 p-2 cursor-pointer transition-all z-20 more-indicator flex flex-col items-center justify-center text-center"
+              <div class="absolute bg-gradient-to-br from-gray-700/90 to-gray-800/90 hover:from-gray-600/95 hover:to-gray-700/95 rounded-lg border border-gray-500/40 hover:border-gray-400/50 p-2 cursor-pointer transition-all z-20 more-indicator flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl hover:scale-[1.02]"
                    style="top: ${top}px; height: ${Math.max(height, 48)}px; left: ${leftStyle}; width: ${widthStyle};"
                    data-bookings="${bookingsData}"
-                   onclick="showMorePopover(this, event)">
-                <span class="text-white font-bold text-sm">+${indicator.count}</span>
-                <span class="text-gray-300 text-[9px]">more</span>
+                   onclick="showMorePopover(this, event)"
+                   title="Click to view ${indicator.count} hidden booking${indicator.count > 1 ? 's' : ''}">
+                <span class="text-brand-yellow font-bold text-sm drop-shadow">+${indicator.count}</span>
+                <span class="text-gray-300 text-[9px] font-medium">more</span>
               </div>
             `;
           }
@@ -1062,15 +1125,29 @@
 
             // Position popover
             const isMobileView = isMobile();
+            const popoverHeight = 250; // Approximate max height of popover
+            const spaceBelow = window.innerHeight - rect.bottom - 20;
+            const spaceAbove = rect.top - 20;
+
             if (isMobileView) {
-              // Center on mobile
+              // Center on mobile, position above if near bottom
               popover.style.left = '50%';
               popover.style.transform = 'translateX(-50%)';
-              popover.style.bottom = '80px';
+              if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+                popover.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+              } else {
+                popover.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - popoverHeight - 20)}px`;
+              }
             } else {
-              // Position near the indicator
+              // Position near the indicator, checking for viewport overflow
               popover.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
-              popover.style.top = `${rect.top + rect.height + 8}px`;
+              if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+                // Not enough space below, position above
+                popover.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+              } else {
+                // Position below, but ensure it doesn't overflow
+                popover.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - popoverHeight - 20)}px`;
+              }
             }
 
             // Build popover content
@@ -1416,7 +1493,7 @@
 
                 // Build "+N more" indicators for hidden bookings
                 layoutData.moreIndicators.forEach(indicator => {
-                  htmlFragments.push(createMoreIndicatorHTML(indicator));
+                  htmlFragments.push(createMoreIndicatorHTML(indicator, currentUser.rider_id));
                 });
 
                 // Build available/restricted slot HTML for each hour

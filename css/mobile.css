@@ -195,6 +195,9 @@ button:active, [role="button"]:active {
   min-height: 40px;
   word-wrap: break-word;
   overflow: hidden;
+  contain: layout style;
+  hyphens: auto;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0s;
 }
 
 /* Ensure text doesn't overflow narrow cards */
@@ -204,10 +207,50 @@ button:active, [role="button"]:active {
   text-overflow: ellipsis;
 }
 
+/* Display mode: minimal (4+ columns or 3+ on mobile) */
+.booking-card--minimal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 32px;
+}
+
+.booking-card--minimal .booking-zone,
+.booking-card--minimal .location_on {
+  display: none !important;
+}
+
+/* Display mode: compact (3 columns or 2 on mobile) */
+.booking-card--compact {
+  min-height: 36px;
+}
+
+.booking-card--compact .booking-zone {
+  display: none;
+}
+
+/* Display mode: standard (2 columns) */
+.booking-card--standard {
+  min-height: 40px;
+}
+
+/* Display mode: full (single column) */
+.booking-card--full {
+  min-height: 48px;
+}
+
+/* Z-index management for overlapping cards */
+.booking-card:hover {
+  z-index: 25 !important;
+}
+
 /* More indicator styles */
 .more-indicator {
   min-height: 48px;
   backdrop-filter: blur(4px);
+  z-index: 20;
 }
 
 .more-indicator:hover {
