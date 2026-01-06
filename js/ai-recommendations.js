@@ -11,8 +11,7 @@ const AIRecommendations = {
   // Initialize recommendations
   async init() {
     // Check if user is logged in
-    const token = localStorage.getItem('nightmarket_token');
-    if (!token) return;
+    if (typeof AuthAPI === 'undefined' || !AuthAPI.isLoggedIn()) return;
     
     this.createWidget();
     await this.fetchRecommendations();
@@ -66,14 +65,15 @@ const AIRecommendations = {
     `;
     
     try {
-      const token = localStorage.getItem('nightmarket_token');
-      const response = await fetch(`${this.apiBase}/ai/recommendations`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const data = await response.json();
+      let data;
+      if (typeof AuthAPI !== 'undefined') {
+        data = await AuthAPI.authFetch('/ai/recommendations');
+      } else {
+        const response = await fetch(`${this.apiBase}/ai/recommendations`, {
+          credentials: 'include'
+        });
+        data = await response.json();
+      }
       
       if (data.success && data.recommendations?.length > 0) {
         this.recommendations = data.recommendations;

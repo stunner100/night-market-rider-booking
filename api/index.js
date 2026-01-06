@@ -1,8 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { body, query, validationResult } from 'express-validator';
 import OpenAI from 'openai';
 
 // Initialize Qwen client via OpenAI-compatible API
@@ -10,8 +14,36 @@ const openai = new OpenAI({
   apiKey: process.env.DASHSCOPE_API_KEY,
   baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 });
+
+const isProduction = process.env.NODE_ENV === 'production';
+const AUTH_COOKIE_NAME = 'nm_auth';
+const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const REQUEST_BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '100kb';
+const ALLOWED_ZONES = ['Main Campus', 'Diaspora', 'Night Market', 'Pent & Beyond'];
+const ALLOWED_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'];
+
+function isStrongSecret(secret) {
+  return !!secret && Buffer.byteLength(secret, 'utf8') >= 32;
+}
+
+function resolveJwtSecret() {
+  if (isStrongSecret(process.env.JWT_SECRET)) {
+    return process.env.JWT_SECRET;
+  }
+  if (isProduction) {
+    if (process.env.DATABASE_URL) {
+      console.warn('JWT_SECRET is not set or too short. Deriving a fallback from DATABASE_URL.');
+      return crypto.createHash('sha256').update(process.env.DATABASE_URL).digest('hex');
+    }
+    throw new Error('JWT_SECRET must be set to a strong value (>= 32 bytes).');
+  }
+  const devSecret = crypto.randomBytes(32).toString('hex');
+  console.warn('JWT_SECRET is not set or too short. Generated a temporary dev secret.');
+  return devSecret;
+}
+
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'night-market-secret-key-change-in-production';
+const JWT_SECRET = resolveJwtSecret();
 const JWT_EXPIRES_IN = '7d';
 
 const app = express();
@@ -19,14 +51,97 @@ const app = express();
 // Booking capacity configuration
 const DAILY_BIKE_LIMIT = 20; // Maximum bookings per day (first 20 can book any slot)
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: 'lax',
+  maxAge: AUTH_COOKIE_MAX_AGE,
+  path: '/'
+};
+const CLEAR_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: 'lax',
+  path: '/'
+};
+
+const defaultCorsOrigins = isProduction
+  ? []
+  : ['http://localhost:3000', 'http://localhost:3001'];
+const configuredCorsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+const corsOrigins = configuredCorsOrigins.length > 0 ? configuredCorsOrigins : defaultCorsOrigins;
+const allowAllOrigins = corsOrigins.length === 0;
+if (isProduction && allowAllOrigins) {
+  console.warn('CORS_ORIGINS not set in production; allowing all origins.');
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowAllOrigins || corsOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
+const rateLimitWindowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000);
+const apiLimiter = rateLimit({
+  windowMs: rateLimitWindowMs,
+  max: Number(process.env.RATE_LIMIT_MAX || 300),
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const authLimiter = rateLimit({
+  windowMs: rateLimitWindowMs,
+  max: Number(process.env.AUTH_RATE_LIMIT_MAX || 20),
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+if (isProduction) {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(308, `https://${req.headers.host}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: REQUEST_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: false, limit: REQUEST_BODY_LIMIT }));
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
 // Database connection
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  max: Number(process.env.DB_POOL_MAX || 20),
+  idleTimeoutMillis: Number(process.env.DB_POOL_IDLE_MS || 30000),
+  connectionTimeoutMillis: Number(process.env.DB_POOL_CONN_MS || 2000)
 });
 
 // Helper functions
@@ -52,10 +167,183 @@ function calculateCost(durationMinutes, hourlyRate = 20) {
   return (durationMinutes / 60) * hourlyRate;
 }
 
+function toDateString(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().split('T')[0];
+  if (typeof value === 'string') return value.split('T')[0];
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split('T')[0];
+}
+
+function extractJsonObject(text) {
+  if (!text) return null;
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return null;
+  const slice = text.slice(start, end + 1);
+  try {
+    return JSON.parse(slice);
+  } catch (error) {
+    return null;
+  }
+}
+
+async function generateRecommendationReasons(recommendations, context) {
+  if (!process.env.DASHSCOPE_API_KEY || !recommendations || recommendations.length === 0) {
+    return null;
+  }
+
+  const summary = {
+    user_history_count: context.userHistoryCount,
+    preferred_zone: context.preferredZone || 'None',
+    preferred_time_of_day: context.preferredTimeOfDay || 'Unknown'
+  };
+  const compactRecs = recommendations.map((rec, index) => ({
+    index,
+    date: rec.date,
+    time: rec.time,
+    zone: rec.zone,
+    crowd_level: rec.crowd_level || 'unknown'
+  }));
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'qwen-plus',
+      messages: [
+        {
+          role: 'system',
+          content: 'Write short, friendly reasons for booking time recommendations.'
+        },
+        {
+          role: 'user',
+          content: `Context: ${JSON.stringify(summary)}\nRecommendations: ${JSON.stringify(compactRecs)}\n\nReturn JSON only: {"reasons":["reason 1","reason 2"]}. Keep each reason under 12 words. Match the order.`
+        }
+      ],
+      temperature: 0.4,
+      max_tokens: 200
+    });
+
+    const content = response.choices?.[0]?.message?.content || '';
+    const parsed = extractJsonObject(content);
+    if (!parsed || !Array.isArray(parsed.reasons)) {
+      return null;
+    }
+    return parsed.reasons.map(reason => (typeof reason === 'string' ? reason.trim() : '')).filter(Boolean);
+  } catch (error) {
+    console.warn('AI recommendation reason generation failed:', error.message);
+    return null;
+  }
+}
+
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(';').forEach(pair => {
+    const [name, ...valueParts] = pair.trim().split('=');
+    if (!name) return;
+    cookies[name] = decodeURIComponent(valueParts.join('='));
+  });
+  return cookies;
+}
+
+function getTokenFromRequest(req) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    const [scheme, token] = authHeader.split(' ');
+    if (scheme === 'Bearer' && token) {
+      return token;
+    }
+  }
+  const cookies = parseCookies(req.headers.cookie);
+  return cookies[AUTH_COOKIE_NAME];
+}
+
+function setAuthCookie(res, token) {
+  res.cookie(AUTH_COOKIE_NAME, token, COOKIE_OPTIONS);
+}
+
+function clearAuthCookie(res) {
+  res.clearCookie(AUTH_COOKIE_NAME, CLEAR_COOKIE_OPTIONS);
+}
+
+function handleValidationErrors(req, res, next) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'VALIDATION_ERROR',
+      message: 'Invalid request data',
+      errors: errors.array().map(err => ({ field: err.path, message: err.msg }))
+    });
+  }
+  next();
+}
+
+const authValidators = [
+  body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name is required'),
+  body('phone')
+    .trim()
+    .isLength({ min: 8, max: 20 })
+    .withMessage('Phone number is required'),
+  handleValidationErrors
+];
+
+const bookingCreateValidators = [
+  body('rider_id').trim().notEmpty().withMessage('rider_id is required'),
+  body('rider_name').trim().notEmpty().withMessage('rider_name is required'),
+  body('rider_email').isEmail().withMessage('rider_email must be a valid email'),
+  body('booking_date')
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('booking_date must be in YYYY-MM-DD format'),
+  body('start_time')
+    .matches(/^\d{2}:\d{2}$/)
+    .withMessage('start_time must be in HH:MM format'),
+  body('duration_minutes')
+    .isInt({ min: 15, max: 480 })
+    .withMessage('duration_minutes must be between 15 and 480 minutes'),
+  body('zone').optional().isIn(ALLOWED_ZONES).withMessage('zone must be a valid zone'),
+  handleValidationErrors
+];
+
+const bookingQueryValidators = [
+  query('date')
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('date must be in YYYY-MM-DD format'),
+  query('rider_id')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage('rider_id must be provided'),
+  query('zone').optional().isIn(ALLOWED_ZONES).withMessage('zone must be a valid zone'),
+  query('status').optional().isIn(ALLOWED_STATUSES).withMessage('status must be valid'),
+  handleValidationErrors
+];
+
+const adminBookingsQueryValidators = [
+  query('status')
+    .optional()
+    .isIn(['all', ...ALLOWED_STATUSES])
+    .withMessage('status must be valid'),
+  query('search')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('search must be between 1 and 100 characters'),
+  query('limit').optional().isInt({ min: 1, max: 200 }).withMessage('limit must be between 1 and 200'),
+  query('offset').optional().isInt({ min: 0, max: 10000 }).withMessage('offset must be between 0 and 10000'),
+  handleValidationErrors
+];
+
+const adminBookingStatusValidators = [
+  body('status').isIn(ALLOWED_STATUSES).withMessage('Invalid status'),
+  handleValidationErrors
+];
+
 // Authentication middleware
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = getTokenFromRequest(req);
 
   if (!token) {
     return res.status(401).json({
@@ -91,7 +379,7 @@ function requireAdmin(req, res, next) {
 
 // Validation middleware
 function validateBookingData(req, res, next) {
-  const { rider_id, rider_name, rider_email, booking_date, start_time, duration_minutes } = req.body;
+  const { rider_id, rider_name, rider_email, booking_date, start_time, duration_minutes, zone } = req.body;
   const errors = [];
 
   if (!rider_id) errors.push('rider_id is required');
@@ -129,6 +417,10 @@ function validateBookingData(req, res, next) {
     errors.push('rider_email must be a valid email address');
   }
 
+  if (zone && !ALLOWED_ZONES.includes(zone)) {
+    errors.push('zone must be one of: ' + ALLOWED_ZONES.join(', '));
+  }
+
   if (errors.length > 0) {
     return res.status(400).json({
       success: false,
@@ -151,7 +443,7 @@ app.get('/api/health', (req, res) => {
 // =====================
 
 // Register
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authValidators, async (req, res) => {
   try {
     const { name, phone } = req.body;
 
@@ -203,10 +495,10 @@ app.post('/api/auth/register', async (req, res) => {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
+    setAuthCookie(res, token);
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
-      token,
       user: {
         rider_id: rider.rider_id,
         name: rider.name,
@@ -227,7 +519,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // Login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authValidators, async (req, res) => {
   try {
     const { name, phone } = req.body;
 
@@ -270,10 +562,10 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
+    setAuthCookie(res, token);
     res.json({
       success: true,
       message: 'Login successful',
-      token,
       user: {
         rider_id: rider.rider_id,
         name: rider.name,
@@ -325,6 +617,11 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/api/auth/logout', (req, res) => {
+  clearAuthCookie(res);
+  res.json({ success: true, message: 'Logged out' });
+});
+
 
 
 // =====================
@@ -332,7 +629,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 // =====================
 
 // Create booking
-app.post('/api/bookings', validateBookingData, async (req, res) => {
+app.post('/api/bookings', bookingCreateValidators, validateBookingData, async (req, res) => {
   try {
     const {
       rider_id,
@@ -407,7 +704,7 @@ app.post('/api/bookings', validateBookingData, async (req, res) => {
 });
 
 // Get bookings
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', bookingQueryValidators, async (req, res) => {
   try {
     const { date, rider_id, zone, status } = req.query;
 
@@ -481,13 +778,19 @@ app.get('/api/bookings/week', async (req, res) => {
     // Build a map of daily counts
     const dailyCounts = {};
     countsResult.rows.forEach(row => {
-      dailyCounts[row.booking_date.toISOString().split('T')[0]] = parseInt(row.daily_count);
+      const dateStr = toDateString(row.booking_date);
+      if (dateStr) {
+        dailyCounts[dateStr] = parseInt(row.daily_count);
+      }
     });
 
     // Group bookings by date
     const bookingsByDate = {};
     bookingsResult.rows.forEach(booking => {
-      const dateStr = booking.booking_date.toISOString().split('T')[0];
+      const dateStr = toDateString(booking.booking_date);
+      if (!dateStr) {
+        return;
+      }
       if (!bookingsByDate[dateStr]) {
         bookingsByDate[dateStr] = [];
       }
@@ -517,8 +820,8 @@ app.get('/api/bookings/week', async (req, res) => {
       });
     }
 
-    // Set cache header (1 minute)
-    res.set('Cache-Control', 'public, max-age=60');
+    // Disable caching so schedule reflects admin changes immediately
+    res.set('Cache-Control', 'no-store');
 
     res.json({
       success: true,
@@ -802,7 +1105,7 @@ app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
-app.get('/api/admin/bookings', authenticateToken, requireAdmin, async (req, res) => {
+app.get('/api/admin/bookings', authenticateToken, requireAdmin, adminBookingsQueryValidators, async (req, res) => {
   try {
     const { status, search, limit = 50, offset = 0 } = req.query;
     let query = 'SELECT * FROM bookings WHERE 1=1';
@@ -821,12 +1124,9 @@ app.get('/api/admin/bookings', authenticateToken, requireAdmin, async (req, res)
   }
 });
 
-app.patch('/api/admin/bookings/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+app.patch('/api/admin/bookings/:id/status', authenticateToken, requireAdmin, adminBookingStatusValidators, async (req, res) => {
   try {
     const { status } = req.body;
-    if (!['confirmed', 'pending', 'cancelled', 'completed'].includes(status)) {
-      return res.status(400).json({ success: false, error: 'VALIDATION_ERROR', message: 'Invalid status' });
-    }
     const result = await pool.query(
       `UPDATE bookings SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $2 RETURNING *`,
       [status, req.params.id]
@@ -849,6 +1149,63 @@ app.get('/api/admin/riders/recent', authenticateToken, requireAdmin, async (req,
     res.json({ success: true, riders: result.rows });
   } catch (error) {
     res.status(500).json({ success: false, error: 'SERVER_ERROR' });
+  }
+});
+
+app.get('/api/admin/riders', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || 50, 10), 200);
+    const offset = Math.max(parseInt(req.query.offset || 0, 10), 0);
+    const search = req.query.search ? String(req.query.search).trim() : '';
+
+    const params = [];
+    let paramIndex = 1;
+    let whereClause = "WHERE r.role = 'rider'";
+
+    if (search) {
+      whereClause += ` AND (r.name ILIKE $${paramIndex} OR r.email ILIKE $${paramIndex} OR r.phone ILIKE $${paramIndex} OR r.rider_id ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex += 1;
+    }
+
+    params.push(limit, offset);
+
+    const query = `
+      SELECT
+        r.rider_id,
+        r.name,
+        r.email,
+        r.phone,
+        r.created_at,
+        COUNT(b.booking_id) FILTER (WHERE b.status != 'cancelled') as booking_count,
+        MAX(b.booking_date) FILTER (WHERE b.status != 'cancelled') as last_booking_date
+      FROM riders r
+      LEFT JOIN bookings b ON b.rider_id = r.rider_id
+      ${whereClause}
+      GROUP BY r.rider_id, r.name, r.email, r.phone, r.created_at
+      ORDER BY r.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const result = await pool.query(query, params);
+    const riders = result.rows.map(row => {
+      const bookingCount = parseInt(row.booking_count || 0, 10);
+      return {
+        rider_id: row.rider_id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        created_at: row.created_at,
+        booking_count: bookingCount,
+        last_booking_date: toDateString(row.last_booking_date),
+        has_booking: bookingCount > 0
+      };
+    });
+
+    res.json({ success: true, count: riders.length, riders });
+  } catch (error) {
+    console.error('Error fetching riders:', error);
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: 'Failed to fetch riders.' });
   }
 });
 
@@ -1188,6 +1545,197 @@ Remember to be helpful and confirm actions before executing them.`
     console.error('AI Chat Error:', error);
     res.status(500).json({ success: false, error: 'SERVER_ERROR', message: 'Failed to process chat request' });
   }
+});
+
+// AI Recommendations endpoint
+app.get('/api/ai/recommendations', authenticateToken, async (req, res) => {
+  try {
+    const riderId = req.user.rider_id;
+
+    const historyResult = await pool.query(
+      'SELECT booking_date, start_time, zone FROM bookings WHERE rider_id = $1 ORDER BY booking_date DESC LIMIT 30',
+      [riderId]
+    );
+
+    const today = new Date();
+    const weekEnd = new Date();
+    weekEnd.setDate(today.getDate() + 7);
+
+    const crowdResult = await pool.query(
+      `SELECT booking_date, EXTRACT(HOUR FROM start_time) as hour, COUNT(*) as count, zone
+       FROM bookings WHERE booking_date >= $1 AND booking_date <= $2 AND status != 'cancelled'
+       GROUP BY booking_date, EXTRACT(HOUR FROM start_time), zone`,
+      [toDateString(today), toDateString(weekEnd)]
+    );
+
+    const userResult = await pool.query(
+      'SELECT preferred_zone FROM riders WHERE rider_id = $1',
+      [riderId]
+    );
+
+    const preferredZone = userResult.rows[0]?.preferred_zone || null;
+    const userHistory = historyResult.rows;
+    const userHistoryCount = userHistory.length;
+
+    const preferredHour = (() => {
+      if (userHistory.length === 0) return null;
+      const counts = {};
+      userHistory.forEach(booking => {
+        if (!booking.start_time) return;
+        const hour = parseInt(String(booking.start_time).split(':')[0], 10);
+        if (Number.isNaN(hour)) return;
+        counts[hour] = (counts[hour] || 0) + 1;
+      });
+      let bestHour = null;
+      let bestCount = 0;
+      Object.entries(counts).forEach(([hour, count]) => {
+        if (count > bestCount) {
+          bestCount = count;
+          bestHour = parseInt(hour, 10);
+        }
+      });
+      return bestHour;
+    })();
+
+    const preferredTime = preferredHour === null
+      ? null
+      : `${String(preferredHour).padStart(2, '0')}:00`;
+    const preferredTimeOfDay = preferredHour === null
+      ? null
+      : preferredHour < 12
+        ? 'Morning'
+        : preferredHour < 17
+          ? 'Afternoon'
+          : 'Evening';
+    const bookingFrequency = userHistoryCount === 0
+      ? 'No recent bookings'
+      : `${userHistoryCount} bookings in last 30 days`;
+
+    const crowdMap = new Map();
+    crowdResult.rows.forEach(row => {
+      const dateStr = toDateString(row.booking_date);
+      if (!dateStr) return;
+      const hour = Number(row.hour);
+      if (Number.isNaN(hour)) return;
+      const zone = row.zone || 'Main Campus';
+      const count = Number(row.count || 0);
+      crowdMap.set(`${dateStr}|${hour}|${zone}`, count);
+    });
+
+    const getCount = (dateStr, hour, zone) => crowdMap.get(`${dateStr}|${hour}|${zone}`) || 0;
+    const zonesToConsider = preferredZone ? [preferredZone] : ALLOWED_ZONES;
+    const recommendations = [];
+
+    for (let i = 0; i < 7 && recommendations.length < 4; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const dateStr = toDateString(date);
+      if (!dateStr) continue;
+
+      let bestSlot = null;
+      for (let hour = 8; hour <= 20; hour++) {
+        zonesToConsider.forEach(zone => {
+          const count = getCount(dateStr, hour, zone);
+          const distance = preferredHour === null ? 0 : Math.abs(hour - preferredHour);
+          const score = count * 10 + distance;
+          if (!bestSlot || score < bestSlot.score) {
+            bestSlot = { hour, zone, count, score, distance };
+          }
+        });
+      }
+
+      if (!bestSlot) continue;
+
+      const crowdLevel = bestSlot.count >= 5 ? 'high' : bestSlot.count >= 2 ? 'medium' : 'low';
+      const baseConfidence = crowdLevel === 'low' ? 0.75 : crowdLevel === 'medium' ? 0.55 : 0.35;
+      const confidenceBoost = (preferredZone && bestSlot.zone === preferredZone ? 0.1 : 0)
+        + (bestSlot.distance <= 1 ? 0.05 : 0);
+      const confidence = Math.min(0.95, baseConfidence + confidenceBoost);
+
+      const reasonParts = [];
+      if (bestSlot.count === 0) {
+        reasonParts.push('Wide-open slot');
+      } else if (bestSlot.count <= 2) {
+        reasonParts.push('Low crowd expected');
+      } else if (bestSlot.count <= 4) {
+        reasonParts.push('Moderate crowd expected');
+      } else {
+        reasonParts.push('Popular time with steady demand');
+      }
+      if (preferredZone && bestSlot.zone === preferredZone) {
+        reasonParts.push('Matches your preferred zone');
+      }
+      if (preferredHour !== null && bestSlot.distance <= 1) {
+        reasonParts.push('Close to your usual time');
+      }
+
+      recommendations.push({
+        date: dateStr,
+        time: `${String(bestSlot.hour).padStart(2, '0')}:00`,
+        zone: bestSlot.zone,
+        reason: reasonParts.join('. '),
+        crowd_level: crowdLevel,
+        confidence
+      });
+    }
+
+    if (recommendations.length === 0) {
+      const fallbackDate = toDateString(today);
+      if (fallbackDate) {
+        recommendations.push({
+          date: fallbackDate,
+          time: '18:00',
+          zone: preferredZone || 'Main Campus',
+          reason: 'A solid time to get started.',
+          crowd_level: 'medium',
+          confidence: 0.4
+        });
+      }
+    }
+
+    const llmReasons = await generateRecommendationReasons(recommendations, {
+      preferredZone,
+      preferredTimeOfDay,
+      userHistoryCount
+    });
+    if (Array.isArray(llmReasons)) {
+      llmReasons.forEach((reason, index) => {
+        if (recommendations[index] && reason) {
+          recommendations[index].reason = reason;
+        }
+      });
+    }
+
+    res.json({
+      success: recommendations.length > 0,
+      recommendations,
+      insights: {
+        preferred_time: preferredTimeOfDay || 'No history yet',
+        preferred_zone: preferredZone || 'No preference',
+        booking_frequency: bookingFrequency
+      },
+      user_history_count: userHistoryCount,
+      preferred_time: preferredTime
+    });
+  } catch (error) {
+    console.error('AI Recommendations Error:', error);
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: 'Failed to get recommendations' });
+  }
+});
+
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Endpoint not found' });
+});
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const isCorsError = err?.message === 'Not allowed by CORS';
+  const status = isCorsError ? 403 : err?.status || 500;
+  res.status(status).json({
+    success: false,
+    error: isCorsError ? 'FORBIDDEN' : 'SERVER_ERROR',
+    message: isCorsError ? 'CORS blocked this request.' : err?.message || 'An unexpected error occurred.'
+  });
 });
 
 export default app;

@@ -60,14 +60,15 @@ const AuthAPI = {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ name, phone })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Store token and user data
-        localStorage.setItem(this.TOKEN_KEY, data.token);
+        // Store user data; auth cookie is httpOnly
+        localStorage.removeItem(this.TOKEN_KEY);
         localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
       }
 
@@ -95,14 +96,15 @@ const AuthAPI = {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ name, phone })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Store token and user data
-        localStorage.setItem(this.TOKEN_KEY, data.token);
+        // Store user data; auth cookie is httpOnly
+        localStorage.removeItem(this.TOKEN_KEY);
         localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
       }
 
@@ -120,27 +122,21 @@ const AuthAPI = {
 
 
   /**
-   * Get current user from server (validates token)
+   * Get current user from server (validates session)
    * @returns {Promise<Object>} - { success, user } or { success, error, message }
    */
   async fetchCurrentUser() {
     try {
-      const token = this.getToken();
-      if (!token) {
-        return { success: false, error: 'NO_TOKEN', message: 'Not logged in' };
-      }
-
       const response = await fetch(`${this.API_URL}/auth/me`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       const data = await response.json();
 
       if (data.success) {
         // Update stored user data
+        localStorage.removeItem(this.TOKEN_KEY);
         localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
       } else {
         // Token invalid, clear storage
@@ -173,19 +169,11 @@ const AuthAPI = {
   },
 
   /**
-   * Get stored auth token
-   * @returns {string|null} - JWT token or null
-   */
-  getToken() {
-    return localStorage.getItem(this.TOKEN_KEY);
-  },
-
-  /**
    * Check if user is logged in
    * @returns {boolean}
    */
   isLoggedIn() {
-    return !!this.getToken();
+    return !!this.getCurrentUser();
   },
 
   /**
@@ -201,6 +189,14 @@ const AuthAPI = {
    * Logout - clear all stored auth data
    */
   logout() {
+    try {
+      fetch(`${this.API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.warn('Logout request failed:', error);
+    }
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
   },
@@ -234,15 +230,6 @@ const AuthAPI = {
   },
 
   /**
-   * Get authorization header for API requests
-   * @returns {Object} - Headers object with Authorization
-   */
-  getAuthHeaders() {
-    const token = this.getToken();
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
-  },
-
-  /**
    * Make authenticated API request
    * @param {string} endpoint - API endpoint (e.g., '/bookings')
    * @param {Object} options - Fetch options
@@ -253,19 +240,19 @@ const AuthAPI = {
 
     const headers = {
       'Content-Type': 'application/json',
-      ...this.getAuthHeaders(),
       ...options.headers
     };
 
     try {
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
+        credentials: 'include'
       });
 
       const data = await response.json();
 
-      // If token expired, logout and redirect
+      // If session expired, logout and redirect
       if (response.status === 401 || response.status === 403) {
         if (data.error === 'FORBIDDEN' || data.error === 'UNAUTHORIZED') {
           this.logout();
@@ -284,6 +271,13 @@ const AuthAPI = {
     }
   }
 };
+
+// Clear any legacy token storage (auth now uses httpOnly cookies)
+try {
+  localStorage.removeItem(AuthAPI.TOKEN_KEY);
+} catch {
+  // Ignore storage access errors (e.g., private mode restrictions)
+}
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {

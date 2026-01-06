@@ -472,6 +472,10 @@
 
           // Current week offset (0 = this week, -1 = last week, 1 = next week)
           let weekOffset = 0;
+          const MIN_BOOKING_MINUTES = 15;
+          const MAX_BOOKING_MINUTES = 480;
+          const AUTO_REFRESH_MS = 60000;
+          let scheduleLoadInFlight = false;
 
           // DOM Elements
           const modal = document.getElementById('bookingModal');
@@ -692,6 +696,12 @@
 
             if (durationMinutes <= 0) {
               showError('End time must be after start time');
+              setLoading(false);
+              return;
+            }
+
+            if (durationMinutes < MIN_BOOKING_MINUTES || durationMinutes > MAX_BOOKING_MINUTES) {
+              showError(`Duration must be between ${MIN_BOOKING_MINUTES} and ${MAX_BOOKING_MINUTES} minutes`);
               setLoading(false);
               return;
             }
@@ -1444,6 +1454,10 @@
 
           // Fetch and display bookings using batch endpoint (OPTIMIZED)
           async function loadScheduleBookings() {
+            if (scheduleLoadInFlight) {
+              return;
+            }
+            scheduleLoadInFlight = true;
             const weekDates = getWeekDates(weekOffset);
             const startDate = formatDate(weekDates[0]);
             const dayColumns = scheduleGrid.querySelectorAll('[data-day]');
@@ -1455,7 +1469,10 @@
 
             try {
               // Single API call for entire week (PERFORMANCE OPTIMIZATION)
-              const response = await fetch(`${API_BASE}/bookings/week?start_date=${startDate}`);
+              const cacheBuster = Date.now();
+              const response = await fetch(`${API_BASE}/bookings/week?start_date=${startDate}&_=${cacheBuster}`, {
+                cache: 'no-store'
+              });
 
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -1541,6 +1558,8 @@
             } catch (error) {
               console.error('Error loading schedule:', error);
               showScheduleError(error.message, 'Check console for details');
+            } finally {
+              scheduleLoadInFlight = false;
             }
           }
 
@@ -1576,6 +1595,20 @@
           const today = new Date().toISOString().split('T')[0];
           bookingDateInput.min = today;
           setupTimeSlotClicks();
+
+          // Cross-tab refresh (e.g., admin cleared bookings)
+          window.addEventListener('storage', (event) => {
+            if (event.key === 'nm_booking_refresh') {
+              loadScheduleBookings();
+            }
+          });
+
+          // Lightweight auto-refresh
+          setInterval(() => {
+            if (!document.hidden) {
+              loadScheduleBookings();
+            }
+          }, AUTO_REFRESH_MS);
         })();
     </script>
     <!-- AI Features -->

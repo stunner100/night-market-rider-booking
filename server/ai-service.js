@@ -76,6 +76,19 @@ Analyze booking data and provide insights about:
 - Predictions for upcoming periods
 Respond with actionable insights in JSON format.`;
 
+function extractJsonObject(text) {
+  if (!text) return null;
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return null;
+  const slice = text.slice(start, end + 1);
+  try {
+    return JSON.parse(slice);
+  } catch (error) {
+    return null;
+  }
+}
+
 // OpenAI Function definitions for the chatbot
 const BOOKING_FUNCTIONS = [
   {
@@ -375,6 +388,53 @@ Respond in this JSON format:
   }
 }
 
+export async function generateRecommendationReasons(recommendations, context) {
+  if (!recommendations || recommendations.length === 0) {
+    return null;
+  }
+
+  const summary = {
+    user_history_count: context.userHistoryCount,
+    preferred_zone: context.preferredZone || 'None',
+    preferred_time_of_day: context.preferredTimeOfDay || 'Unknown'
+  };
+  const compactRecs = recommendations.map((rec, index) => ({
+    index,
+    date: rec.date,
+    time: rec.time,
+    zone: rec.zone,
+    crowd_level: rec.crowd_level || 'unknown'
+  }));
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: FAST_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "Write short, friendly reasons for booking time recommendations."
+        },
+        {
+          role: "user",
+          content: `Context: ${JSON.stringify(summary)}\nRecommendations: ${JSON.stringify(compactRecs)}\n\nReturn JSON only: {"reasons":["reason 1","reason 2"]}. Keep each reason under 12 words. Match the order.`
+        }
+      ],
+      temperature: 0.4,
+      max_tokens: 200
+    });
+
+    const content = response.choices?.[0]?.message?.content || '';
+    const parsed = extractJsonObject(content);
+    if (!parsed || !Array.isArray(parsed.reasons)) {
+      return null;
+    }
+    return parsed.reasons.map(reason => (typeof reason === 'string' ? reason.trim() : '')).filter(Boolean);
+  } catch (error) {
+    console.error('Reason generation error:', error);
+    return null;
+  }
+}
+
 /**
  * Demand Prediction & Analytics
  */
@@ -655,6 +715,7 @@ export async function getCrowdAnalysis(bookingsData, targetDate) {
 export default {
   chatWithAssistant,
   getSmartRecommendations,
+  generateRecommendationReasons,
   analyzeDemandPatterns,
   generateNotification,
   naturalLanguageSearch,

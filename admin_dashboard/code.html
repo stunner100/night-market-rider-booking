@@ -201,6 +201,52 @@
                 </div>
             </div>
 
+            <!-- Riders Section -->
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <h2 class="text-xl font-bold text-white">All Riders</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-brand-text-muted">
+                                <span class="material-symbols-outlined text-lg">search</span>
+                            </span>
+                            <input id="ridersSearchInput" type="text" placeholder="Search riders"
+                                class="pl-10 pr-4 py-2 rounded-lg bg-brand-gray border border-brand-light-gray text-white text-sm focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-brand-light-gray">
+                    <table class="w-full text-left">
+                        <thead class="bg-brand-gray text-brand-text-muted text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 font-medium">Rider</th>
+                                <th class="px-4 py-3 font-medium">Phone</th>
+                                <th class="px-4 py-3 font-medium">Email</th>
+                                <th class="px-4 py-3 font-medium">Bookings</th>
+                                <th class="px-4 py-3 font-medium">Last Booking</th>
+                                <th class="px-4 py-3 font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ridersTableBody" class="divide-y divide-brand-light-gray">
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-brand-text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <p id="ridersPaginationInfo" class="text-sm text-brand-text-muted">Showing 0 riders</p>
+                    <div class="flex gap-2">
+                        <button id="ridersPrevBtn" disabled
+                            class="px-4 py-2 rounded-lg bg-brand-gray text-white text-sm font-medium disabled:opacity-50 hover:bg-brand-light-gray transition-colors">Previous</button>
+                        <button id="ridersNextBtn"
+                            class="px-4 py-2 rounded-lg bg-brand-gray text-white text-sm font-medium disabled:opacity-50 hover:bg-brand-light-gray transition-colors">Next</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Riders Section -->
             <div class="flex flex-col gap-4">
                 <h2 class="text-xl font-bold text-white">New Riders</h2>
@@ -258,6 +304,10 @@
             let currentPage = 0;
             const pageSize = 20;
             let allBookings = [];
+            let ridersPage = 0;
+            const ridersPageSize = 20;
+            let ridersSearchQuery = '';
+            let ridersList = [];
 
             // DOM Elements
             const activeRiders = document.getElementById('activeRiders');
@@ -270,6 +320,11 @@
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const exportBtn = document.getElementById('exportBtn');
+            const ridersTableBody = document.getElementById('ridersTableBody');
+            const ridersSearchInput = document.getElementById('ridersSearchInput');
+            const ridersPaginationInfo = document.getElementById('ridersPaginationInfo');
+            const ridersPrevBtn = document.getElementById('ridersPrevBtn');
+            const ridersNextBtn = document.getElementById('ridersNextBtn');
 
             // Fetch admin stats
             async function fetchStats() {
@@ -398,6 +453,60 @@
                 } catch (error) { console.error('Error fetching riders:', error); }
             }
 
+            async function fetchRiders() {
+                try {
+                    let url = `/admin/riders?limit=${ridersPageSize}&offset=${ridersPage * ridersPageSize}`;
+                    if (ridersSearchQuery) url += `&search=${encodeURIComponent(ridersSearchQuery)}`;
+
+                    const response = await AuthAPI.authFetch(url);
+                    if (response.success) {
+                        ridersList = response.riders || [];
+                        renderRidersTable();
+                        ridersPaginationInfo.textContent = `Showing ${ridersList.length} riders`;
+                        ridersPrevBtn.disabled = ridersPage === 0;
+                        ridersNextBtn.disabled = ridersList.length < ridersPageSize;
+                    }
+                } catch (error) { console.error('Error fetching riders:', error); }
+            }
+
+            function renderRidersTable() {
+                if (ridersList.length === 0) {
+                    ridersTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-brand-text-muted">No riders found</td></tr>';
+                    return;
+                }
+
+                const statusClasses = {
+                    booked: 'bg-green-900/30 text-green-400 border-green-500/30',
+                    empty: 'bg-gray-800/60 text-gray-300 border-gray-500/30'
+                };
+
+                ridersTableBody.innerHTML = ridersList.map(rider => {
+                    const lastBooking = rider.last_booking_date
+                        ? new Date(rider.last_booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        : '-';
+                    const bookingLabel = rider.has_booking ? 'Booked' : 'No booking';
+                    const bookingClass = rider.has_booking ? statusClasses.booked : statusClasses.empty;
+                    const phone = rider.phone || '-';
+                    const email = rider.email || '-';
+                    const bookingCount = typeof rider.booking_count === 'number' ? rider.booking_count : 0;
+
+                    return `
+        <tr class="hover:bg-brand-gray/50 transition-colors">
+          <td class="px-4 py-3 text-sm text-white">${rider.name}</td>
+          <td class="px-4 py-3 text-sm text-brand-text-muted">${phone}</td>
+          <td class="px-4 py-3 text-sm text-brand-text-muted">${email}</td>
+          <td class="px-4 py-3 text-sm">${bookingCount}</td>
+          <td class="px-4 py-3 text-sm text-brand-text-muted">${lastBooking}</td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-1 rounded-full text-xs font-medium border ${bookingClass}">
+              ${bookingLabel}
+            </span>
+          </td>
+        </tr>
+      `;
+                }).join('');
+            }
+
             // Filter buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -422,9 +531,21 @@
                 }, 300);
             });
 
+            let ridersSearchTimeout;
+            ridersSearchInput.addEventListener('input', (e) => {
+                clearTimeout(ridersSearchTimeout);
+                ridersSearchTimeout = setTimeout(() => {
+                    ridersSearchQuery = e.target.value;
+                    ridersPage = 0;
+                    fetchRiders();
+                }, 300);
+            });
+
             // Pagination
             prevBtn.addEventListener('click', () => { if (currentPage > 0) { currentPage--; fetchBookings(); } });
             nextBtn.addEventListener('click', () => { currentPage++; fetchBookings(); });
+            ridersPrevBtn.addEventListener('click', () => { if (ridersPage > 0) { ridersPage--; fetchRiders(); } });
+            ridersNextBtn.addEventListener('click', () => { ridersPage++; fetchRiders(); });
 
             // Export
             exportBtn.addEventListener('click', () => {
@@ -483,6 +604,12 @@
                         showToast(`Deleted ${response.deleted_count} bookings`, 'success');
                         await fetchBookings();
                         await fetchStats();
+                        try {
+                            // Notify other tabs (schedule) to refresh
+                            localStorage.setItem('nm_booking_refresh', Date.now().toString());
+                        } catch (e) {
+                            console.warn('Unable to broadcast booking refresh', e);
+                        }
                     } else {
                         showToast(response.message || 'Failed to clear bookings', 'error');
                     }
@@ -663,7 +790,7 @@
             document.getElementById('refresh-analytics')?.addEventListener('click', fetchAIAnalytics);
 
             // Initial load
-            await Promise.all([fetchStats(), fetchBookings(), fetchRecentRiders()]);
+            await Promise.all([fetchStats(), fetchBookings(), fetchRecentRiders(), fetchRiders()]);
 
             // Load AI analytics (non-blocking)
             fetchAIAnalytics();

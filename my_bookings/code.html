@@ -317,6 +317,8 @@
       let allBookings = [];
       let currentTab = 'upcoming';
       let searchQuery = '';
+      const MIN_BOOKING_MINUTES = 15;
+      const MAX_BOOKING_MINUTES = 480;
 
       // DOM Elements
       const bookingsContainer = document.getElementById('bookingsContainer');
@@ -329,6 +331,14 @@
       const upcomingBadge = document.getElementById('upcomingBadge');
       const completedBadge = document.getElementById('completedBadge');
       const cancelledBadge = document.getElementById('cancelledBadge');
+
+      function notifyScheduleRefresh() {
+        try {
+          localStorage.setItem('nm_booking_refresh', Date.now().toString());
+        } catch (error) {
+          // Ignore storage errors (e.g., private mode restrictions)
+        }
+      }
 
       // Fetch bookings from API
       async function fetchBookings() {
@@ -625,6 +635,7 @@
             updateStats();
             updateBadges();
             renderBookings();
+            notifyScheduleRefresh();
             showToast('Booking cancelled successfully', 'success');
           } else {
             showToast(response.message || 'Failed to cancel booking', 'error');
@@ -731,6 +742,12 @@
           return;
         }
 
+        if (durationMinutes < MIN_BOOKING_MINUTES || durationMinutes > MAX_BOOKING_MINUTES) {
+          showRescheduleError(`Duration must be between ${MIN_BOOKING_MINUTES} and ${MAX_BOOKING_MINUTES} minutes`);
+          setRescheduleLoading(false);
+          return;
+        }
+
         const rescheduleData = {
           booking_date: rescheduleDateInput.value,
           start_time: startTime,
@@ -746,6 +763,7 @@
           if (response.success) {
             closeRescheduleModal();
             await fetchBookings(); // Refresh all bookings
+            notifyScheduleRefresh();
             showToast('Booking rescheduled successfully', 'success');
           } else {
             showRescheduleError(response.message || 'Failed to reschedule booking');

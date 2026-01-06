@@ -375,8 +375,7 @@ const AIChatWidget = {
 
     try {
       // Check if user is logged in
-      const token = localStorage.getItem('nm_auth_token');
-      if (!token) {
+      if (typeof AuthAPI === 'undefined' || !AuthAPI.isLoggedIn()) {
         this.removeLoadingMessage();
         this.addMessage('assistant', "Please log in to use the AI assistant. I need to know who you are to help with bookings!");
         return;
@@ -391,16 +390,23 @@ const AIChatWidget = {
       // Add current message
       conversationHistory.push({ role: 'user', content: userMessage });
 
-      const response = await fetch(`${this.apiBase}/ai/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ messages: conversationHistory })
-      });
-
-      const data = await response.json();
+      let data;
+      if (typeof AuthAPI !== 'undefined') {
+        data = await AuthAPI.authFetch('/ai/chat', {
+          method: 'POST',
+          body: JSON.stringify({ messages: conversationHistory })
+        });
+      } else {
+        const response = await fetch(`${this.apiBase}/ai/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({ messages: conversationHistory })
+        });
+        data = await response.json();
+      }
 
       this.removeLoadingMessage();
 

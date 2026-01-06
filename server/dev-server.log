@@ -1,0 +1,14 @@
+
+  Night Market Booking API Server
+  ================================
+  Server running on http://localhost:3001
+
+  Endpoints:
+    POST   /api/bookings              - Create a new booking
+    GET    /api/bookings              - List all bookings
+    GET    /api/bookings/:id          - Get booking by ID
+    PATCH  /api/bookings/:id/cancel   - Cancel a booking
+    GET    /api/availability          - Check available time slots
+    GET    /api/health                - Health check
+  
+Database connected successfully
