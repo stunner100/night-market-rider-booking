@@ -239,7 +239,7 @@ const AuthAPI = {
    */
   async authFetch(endpoint, options = {}) {
     const isAbsolute = endpoint.startsWith('http');
-    const isApiPath = endpoint.startsWith('/api');
+    const isApiPath = endpoint.startsWith('/api') && this.API_URL && this.API_URL.startsWith('/');
     const url = (isAbsolute || isApiPath) ? endpoint : `${this.API_URL}${endpoint}`;
 
     const headers = {

@@ -110,7 +110,7 @@ Production requires `CORS_ORIGINS` and either `JWT_SECRET` or `JWT_FALLBACK_SECR
 
 ## Release Notes
 
-- Breaking: production deployments must set `CORS_ORIGINS`.
+- Breaking: production deployments must set `CORS_ORIGINS` and provide `JWT_SECRET` or `JWT_FALLBACK_SECRET` for JWT authentication.
 
 ### Installation
 
