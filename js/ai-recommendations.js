@@ -11,7 +11,7 @@ const AIRecommendations = {
   // Initialize recommendations
   async init() {
     // Check if user is logged in
-    if (typeof AuthAPI === 'undefined' || !AuthAPI.isLoggedIn()) return;
+    if (typeof AuthAPI !== 'undefined' && !AuthAPI.isLoggedIn()) return;
     
     this.createWidget();
     await this.fetchRecommendations();
@@ -67,11 +67,22 @@ const AIRecommendations = {
     try {
       let data;
       if (typeof AuthAPI !== 'undefined') {
-        data = await AuthAPI.authFetch('/ai/recommendations');
+        const authResponse = await AuthAPI.authFetch('/ai/recommendations');
+        if (authResponse && typeof authResponse.ok === 'boolean' && typeof authResponse.json === 'function') {
+          if (!authResponse.ok) {
+            throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`);
+          }
+          data = await authResponse.json();
+        } else {
+          data = authResponse;
+        }
       } else {
         const response = await fetch(`${this.apiBase}/ai/recommendations`, {
           credentials: 'include'
         });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         data = await response.json();
       }
       

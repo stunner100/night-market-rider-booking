@@ -177,7 +177,7 @@
                                 <th class="px-4 py-3 font-medium">Date</th>
                                 <th class="px-4 py-3 font-medium">Time</th>
                                 <th class="px-4 py-3 font-medium">Zone</th>
-                                <th class="px-4 py-3 font-medium">Status</th>
+                                <th class="px-4 py-3 font-medium">Active Booking</th>
                                 <th class="px-4 py-3 font-medium">Actions</th>
                             </tr>
                         </thead>
@@ -223,8 +223,8 @@
                                 <th class="px-4 py-3 font-medium">Rider</th>
                                 <th class="px-4 py-3 font-medium">Phone</th>
                                 <th class="px-4 py-3 font-medium">Email</th>
-                                <th class="px-4 py-3 font-medium">Bookings</th>
-                                <th class="px-4 py-3 font-medium">Last Booking</th>
+                                <th class="px-4 py-3 font-medium">Total Bookings</th>
+                                <th class="px-4 py-3 font-medium">Last Booking Date</th>
                                 <th class="px-4 py-3 font-medium">Status</th>
                             </tr>
                         </thead>
@@ -476,16 +476,16 @@
                 }
 
                 const statusClasses = {
-                    booked: 'bg-green-900/30 text-green-400 border-green-500/30',
-                    empty: 'bg-gray-800/60 text-gray-300 border-gray-500/30'
+                    active: 'bg-green-900/30 text-green-400 border-green-500/30',
+                    inactive: 'bg-gray-800/60 text-gray-300 border-gray-500/30'
                 };
 
                 ridersTableBody.innerHTML = ridersList.map(rider => {
                     const lastBooking = rider.last_booking_date
                         ? new Date(rider.last_booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                         : '-';
-                    const bookingLabel = rider.has_booking ? 'Booked' : 'No booking';
-                    const bookingClass = rider.has_booking ? statusClasses.booked : statusClasses.empty;
+                    const bookingLabel = rider.has_booking ? 'Active' : 'Inactive';
+                    const bookingClass = rider.has_booking ? statusClasses.active : statusClasses.inactive;
                     const phone = rider.phone || '-';
                     const email = rider.email || '-';
                     const bookingCount = typeof rider.booking_count === 'number' ? rider.booking_count : 0;

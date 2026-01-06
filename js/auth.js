@@ -193,6 +193,8 @@ const AuthAPI = {
       fetch(`${this.API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
+      }).catch(error => {
+        console.warn('Logout request failed:', error);
       });
     } catch (error) {
       console.warn('Logout request failed:', error);

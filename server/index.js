@@ -33,11 +33,11 @@ function resolveJwtSecret() {
     return process.env.JWT_SECRET;
   }
   if (isProduction) {
-    if (process.env.DATABASE_URL) {
-      console.warn('JWT_SECRET is not set or too short. Deriving a fallback from DATABASE_URL.');
-      return crypto.createHash('sha256').update(process.env.DATABASE_URL).digest('hex');
+    if (isStrongSecret(process.env.JWT_FALLBACK_SECRET)) {
+      console.warn('JWT_SECRET is not set or too short. Using JWT_FALLBACK_SECRET.');
+      return process.env.JWT_FALLBACK_SECRET;
     }
-    throw new Error('JWT_SECRET must be set to a strong value (>= 32 bytes).');
+    throw new Error('JWT_SECRET must be set to a strong value (>= 32 bytes) or provide JWT_FALLBACK_SECRET.');
   }
   const devSecret = crypto.randomBytes(32).toString('hex');
   console.warn('JWT_SECRET is not set or too short. Generated a temporary dev secret.');
@@ -85,7 +85,7 @@ const configuredCorsOrigins = (process.env.CORS_ORIGINS || '')
 const corsOrigins = configuredCorsOrigins.length > 0 ? configuredCorsOrigins : defaultCorsOrigins;
 const allowAllOrigins = corsOrigins.length === 0;
 if (isProduction && allowAllOrigins) {
-  console.warn('CORS_ORIGINS not set in production; allowing all origins.');
+  throw new Error('CORS_ORIGINS must be set in production.');
 }
 
 const corsOptions = {

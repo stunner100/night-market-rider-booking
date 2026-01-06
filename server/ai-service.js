@@ -78,15 +78,52 @@ Respond with actionable insights in JSON format.`;
 
 function extractJsonObject(text) {
   if (!text) return null;
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) return null;
-  const slice = text.slice(start, end + 1);
-  try {
-    return JSON.parse(slice);
-  } catch (error) {
-    return null;
+  const startIndex = text.indexOf('{');
+  if (startIndex === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let isEscaped = false;
+
+  for (let i = startIndex; i < text.length; i++) {
+    const ch = text[i];
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        isEscaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{') {
+      depth += 1;
+    } else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        const slice = text.slice(startIndex, i + 1);
+        try {
+          return JSON.parse(slice);
+        } catch (error) {
+          return null;
+        }
+      }
+    }
   }
+
+  return null;
 }
 
 // OpenAI Function definitions for the chatbot
@@ -393,10 +430,11 @@ export async function generateRecommendationReasons(recommendations, context) {
     return null;
   }
 
+  const safeContext = context && typeof context === 'object' ? context : {};
   const summary = {
-    user_history_count: context.userHistoryCount,
-    preferred_zone: context.preferredZone || 'None',
-    preferred_time_of_day: context.preferredTimeOfDay || 'Unknown'
+    user_history_count: safeContext.userHistoryCount ?? 0,
+    preferred_zone: safeContext.preferredZone || 'None',
+    preferred_time_of_day: safeContext.preferredTimeOfDay || 'Unknown'
   };
   const compactRecs = recommendations.map((rec, index) => ({
     index,
@@ -419,12 +457,18 @@ export async function generateRecommendationReasons(recommendations, context) {
           content: `Context: ${JSON.stringify(summary)}\nRecommendations: ${JSON.stringify(compactRecs)}\n\nReturn JSON only: {"reasons":["reason 1","reason 2"]}. Keep each reason under 12 words. Match the order.`
         }
       ],
+      response_format: { type: "json_object" },
       temperature: 0.4,
       max_tokens: 200
     });
 
     const content = response.choices?.[0]?.message?.content || '';
-    const parsed = extractJsonObject(content);
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (error) {
+      parsed = extractJsonObject(content);
+    }
     if (!parsed || !Array.isArray(parsed.reasons)) {
       return null;
     }
