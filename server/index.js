@@ -1425,11 +1425,15 @@ app.post('/api/notifications/smart', authenticateToken, async (req, res) => {
     if (upcomingResult.rows.length > 0) {
       // User has upcoming booking - send reminder
       const nextBooking = upcomingResult.rows[0];
-      const bookingDate = new Date(nextBooking.booking_date);
+      const bookingDateStr = nextBooking.booking_date instanceof Date
+        ? nextBooking.booking_date.toISOString().split('T')[0]
+        : nextBooking.booking_date;
+      const startTimeStr = nextBooking.start_time.toString().slice(0, 5);
+      const bookingDateTime = new Date(`${bookingDateStr}T${startTimeStr}:00`);
       const now = new Date();
-      const diffHours = Math.round((bookingDate - now) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((bookingDateTime.getTime() - now.getTime()) / (1000 * 60));
 
-      if (diffHours <= 24 && diffHours > 0) {
+      if (diffMinutes <= 24 * 60 && diffMinutes > 0) {
         notificationType = 'booking_reminder';
         context = {
           booking_id: nextBooking.booking_id,
@@ -1438,7 +1442,9 @@ app.post('/api/notifications/smart', authenticateToken, async (req, res) => {
           end_time: nextBooking.end_time,
           zone: nextBooking.zone,
           rider_name: user.name,
-          time_until: diffHours <= 1 ? `${diffHours * 60} minutes` : `${diffHours} hours`
+          time_until: diffMinutes < 60
+            ? `${diffMinutes} minutes`
+            : `${Math.round(diffMinutes / 60)} hours`
         };
       }
     } else if (historyResult.rows.length > 0) {
