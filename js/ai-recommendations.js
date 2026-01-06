@@ -67,7 +67,7 @@ const AIRecommendations = {
     try {
       let data;
       if (typeof AuthAPI !== 'undefined') {
-        const authResponse = await AuthAPI.authFetch('/ai/recommendations');
+        const authResponse = await AuthAPI.authFetch(`${this.apiBase}/ai/recommendations`);
         if (authResponse && typeof authResponse.ok === 'boolean' && typeof authResponse.json === 'function') {
           if (!authResponse.ok) {
             throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`);

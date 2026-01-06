@@ -238,7 +238,9 @@ const AuthAPI = {
    * @returns {Promise<Object>} - API response
    */
   async authFetch(endpoint, options = {}) {
-    const url = endpoint.startsWith('http') ? endpoint : `${this.API_URL}${endpoint}`;
+    const isAbsolute = endpoint.startsWith('http');
+    const isApiPath = endpoint.startsWith('/api');
+    const url = (isAbsolute || isApiPath) ? endpoint : `${this.API_URL}${endpoint}`;
 
     const headers = {
       'Content-Type': 'application/json',

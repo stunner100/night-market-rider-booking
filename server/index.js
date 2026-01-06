@@ -85,7 +85,7 @@ const configuredCorsOrigins = (process.env.CORS_ORIGINS || '')
 const corsOrigins = configuredCorsOrigins.length > 0 ? configuredCorsOrigins : defaultCorsOrigins;
 const allowAllOrigins = corsOrigins.length === 0;
 if (isProduction && allowAllOrigins) {
-  throw new Error('CORS_ORIGINS must be set in production.');
+  throw new Error('CORS_ORIGINS must be set in production to a comma-separated list of allowed origins.');
 }
 
 const corsOptions = {

@@ -97,10 +97,20 @@ DATABASE_URL=postgresql://user:password@host:port/database
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key
+JWT_FALLBACK_SECRET=optional-strong-fallback-secret
+
+# Security / CORS
+CORS_ORIGINS=https://night-market-rider-booking.vercel.app
 
 # AI (Qwen via Alibaba Cloud)
 DASHSCOPE_API_KEY=your-dashscope-api-key
 ```
+
+Production requires `CORS_ORIGINS` and either `JWT_SECRET` or `JWT_FALLBACK_SECRET`.
+
+## Release Notes
+
+- Breaking: production deployments must set `CORS_ORIGINS`.
 
 ### Installation
 
